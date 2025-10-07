@@ -122,13 +122,6 @@ func UpdateUser(c *fiber.Ctx) error {
 	// If password is present, hash it
 	if updateData.Password != "" {
 		user.Password = updateData.Password
-		if err := user.BeforeCreate(db); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"status":  "fail",
-				"message": "Password validation failed",
-				"error":   err.Error(),
-			})
-		}
 	}
 
 	if err := db.Save(&user).Error; err != nil {
@@ -196,6 +189,8 @@ func Login(c *fiber.Ctx) error {
 			"message": "Invalid username or password",
 		})
 	}
+	
+	
 
 	if !CheckPasswordHash(input.Password, user.Password) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
