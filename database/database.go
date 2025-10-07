@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,10 +26,17 @@ func ConnectDB() *gorm.DB {
 	// Run migrations
 
 	log.Println("🧩 Running migrations...")
-	// db.Migrator().DropTable(&models.User{})
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	db.Migrator().DropTable(&models.User{})
+	if err := db.AutoMigrate(&models.User{} ,&models.Company{}); err != nil {
 		log.Fatal("❌ Migration failed:", err)
 	}
+	log.Println("✅ Migration completed")
+	if err := utils.CreateDefaultAdmin(db); err != nil {
+		log.Fatal("❌ Creating default admin user failed:", err)
+	}
+	log.Println("✅ Default admin user ensured")
+
+
 
 	DB = db
 	return db

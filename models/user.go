@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -20,41 +19,45 @@ const (
 
 // User model
 type User struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	UserName  string         `gorm:"type:varchar(100);not null" json:"username"`
+	gorm.Model
+	UserName  string         `gorm:"column:username;type:varchar(100);not null" json:"username"`
 	Password  string         `gorm:"type:varchar(100);not null" json:"password"`
 	Email     string         `gorm:"uniqueIndex;type:varchar(100);not null" json:"email"`
 	Role      Role           `gorm:"type:varchar(20);default:'user'" json:"role"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"` // Soft delete
+	ExpiresAt time.Time      `gorm:"type:timestamp;default:null" json:"expires_at"`
+	CompanyId *uint           `gorm:"column:company_id;type:integer" json:"company_id"`
+	Company  *Company        `gorm:"foreignKey:CompanyId" json:"company"`
 }
 
 // BeforeCreate handles validation and password hashing
-func (u *User) BeforeCreate() error {
-	// 1️⃣ Basic validation
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	// Basic required fields
 	if strings.TrimSpace(u.UserName) == "" {
-		return errors.New("name is required")
+		return errors.New("username is required")
 	}
 	if strings.TrimSpace(u.Email) == "" {
 		return errors.New("email is required")
 	}
-	fmt.Println(u)
 	if strings.TrimSpace(u.Password) == "" {
 		return errors.New("password is required")
 	}
 
-	// 2️⃣ Validate role (enum)
-	validRoles := map[string]bool{
-		"user":  true,
-		"admin": true,
-		"staff": true,
-	}
-	if _, ok := validRoles[string(u.Role)]; !ok {
-		u.Role = RoleUser // default role
+	// Optional: company validation for non-admins
+	if u.Role != RoleAdmin && u.CompanyId == nil {
+		return errors.New("company_id is required for non-admin users")
 	}
 
-	// 3️⃣ Hash password
+	// Default expiry
+	if u.ExpiresAt.IsZero() {
+		u.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
+	}
+
+	// Validate role
+	if u.Role != RoleAdmin && u.Role != RoleUser {
+		u.Role = RoleUser
+	}
+
+	// Hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err

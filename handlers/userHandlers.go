@@ -20,7 +20,7 @@ func AllUsers(c *fiber.Ctx) error {
 		queries[k] = append(queries[k], v)
 	})
 
-	allowedCols := []string{"id", "user_name", "email", "age", "created_at", "updated_at", "deleted_at"}
+	allowedCols := []string{"id", "username", "email", "age", "created_at", "updated_at", "deleted_at"}
 
 	queryBuild := utils.NewQueryBuilder(db, queries, allowedCols)
 
@@ -60,14 +60,7 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	// validation and password hashing
-	if err := user.BeforeCreate(); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "validation failed",
-			"error":   err.Error(),
-		})
-	}
+	
 
 	if err := db.Create(&user).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -101,7 +94,6 @@ func SingleUser(c *fiber.Ctx) error {
 		"data":   user,
 	})
 }
-
 func UpdateUser(c *fiber.Ctx) error {
 	db := database.DB
 	id := c.Params("id")
@@ -130,7 +122,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	// If password is present, hash it
 	if updateData.Password != "" {
 		user.Password = updateData.Password
-		if err := user.BeforeCreate(); err != nil {
+		if err := user.BeforeCreate(db); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"status":  "fail",
 				"message": "Password validation failed",
@@ -198,7 +190,7 @@ func Login(c *fiber.Ctx) error {
 
 	var user models.User
 
-	if err := db.Where("user_name = ?", input.UserName).First(&user).Error; err != nil {
+	if err := db.Where("username = ?", input.UserName).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Invalid username or password",

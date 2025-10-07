@@ -25,6 +25,7 @@ func main() {
 	database.ConnectDB()
 	// Register routes (pass db pointer)
 	app.Route("api/v1" , routes.SetupUserRoutes)
+	app.Route("api/v1" , routes.SetupCompanyRoutes)
 
 	// Start server
 	port := os.Getenv("PORT")
