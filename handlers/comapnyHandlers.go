@@ -17,15 +17,14 @@ func AllCompanies(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"id" , "name" , "address" , "phone" , "email" , "created_at" , "updated_at"}
-	apiFeatures := utils.NewQueryBuilder(db ,queries ,allowedCols)
+	allowedCols := []string{"id", "name", "address", "phone", "email", "created_at", "updated_at"}
+	apiFeatures := utils.NewQueryBuilder(db, queries, allowedCols)
 
 	apiFeatures.Filter().Sort().LimitFields().Paginate()
 
-
-	if err := apiFeatures.Apply().Find(&companies).Error ; err!= nil{
+	if err := apiFeatures.Apply().Find(&companies).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error" : "Failed to fetch companies",
+			"error":   "Failed to fetch companies",
 			"details": err.Error(),
 		})
 	}
@@ -33,12 +32,11 @@ func AllCompanies(c *fiber.Ctx) error {
 	var total int64
 	utils.NewQueryBuilder(db, queries, allowedCols).Filter().Apply().Model(&models.Company{}).Count(&total)
 
-
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "success",
+		"status":  "success",
 		"results": len(companies),
-		"total": total,
-		"data": companies,
+		"total":   total,
+		"data":    companies,
 	})
 }
 func CreateCompany(c *fiber.Ctx) error {
@@ -67,14 +65,103 @@ func CreateCompany(c *fiber.Ctx) error {
 }
 
 func SingleCompany(c *fiber.Ctx) error {
-	return nil
+	db := database.DB
+	id := c.Params("id")
 
+	var company models.Company
+	if err := db.First(&company, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Company not found",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   company,
+	})
 }
 func UpdateCompany(c *fiber.Ctx) error {
-	return nil
+	db := database.DB
+	id := c.Params("id")
 
+	var company models.Company
+	if err := db.First(&company, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Company not found",
+			"error":   err.Error(),
+		})
+	}
+
+	// Parse dynamic JSON body into a map
+	var updateData map[string]interface{}
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Invalid request body",
+			"error":   err.Error(),
+		})
+	}
+
+	// // ✅ Optional: Restrict allowed fields
+	// allowedFields := map[string]bool{
+	// 	"name":        true,
+	// 	"isLicensed":  true,
+	// 	"isLicensed":  true,
+	// 	"isLicensed":  true,
+	// 	"isLicensed":  true,
+	// 	"isLicensed":  true,
+	// 	"description": true,
+	// }
+
+	// for key := range updateData {
+	// 	if !allowedFields[key] {
+	// 		delete(updateData, key) // ignore disallowed fields
+	// 	}
+	// }
+
+	// ✅ Perform the update (updates only provided fields)
+	if err := db.Model(&company).Updates(updateData).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Could not update company",
+			"error":   err.Error(),
+		})
+	}
+
+	// Refresh updated record
+	db.First(&company, id)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   company,
+	})
 }
 func DeleteCompany(c *fiber.Ctx) error {
-	return nil
+	db := database.DB
+	id := c.Params("id")
 
+	var company models.Company
+	if err := db.First(&company, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Company not found",
+			"error":   err.Error(),
+		})
+	}
+
+	if err := db.Delete(&company).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Could not delete company",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Company deleted successfully",
+	})
 }

@@ -8,11 +8,11 @@ import (
 func SetupCompanyRoutes(api fiber.Router) {
 	company := api.Group("/companies")
 	// Public routes
+	company.Post("/", handlers.CreateCompany)
 	// Protected routes
 	// company.Use(middlewares.IsAuthenticated)
-	
-	company.Post("/", handlers.CreateCompany)
-	company.Get("/",  handlers.AllCompanies)
+
+	company.Get("/", handlers.AllCompanies)
 	company.Get("/:id", handlers.SingleCompany)
 	company.Patch("/:id", handlers.UpdateCompany)
 	company.Delete("/:id", handlers.DeleteCompany)

@@ -20,14 +20,14 @@ const (
 // User model
 type User struct {
 	gorm.Model
-	UserName  string         `gorm:"column:username;type:varchar(100);not null" json:"username"`
-	Password  string         `gorm:"type:varchar(100);not null" json:"-"`
-	Email     string         `gorm:"uniqueIndex;type:varchar(100);not null" json:"email"`
-	Role      Role           `gorm:"type:varchar(20);default:'user'" json:"role"`
-	ExpiresAt *time.Time     `gorm:"type:timestamp;default:null" json:"expires_at"`
-	CompanyId *uint          `gorm:"column:company_id;index" json:"company_id"`
-	Company   *Company       `gorm:"foreignKey:CompanyId" json:"company,omitempty"`
-	Active    bool           `gorm:"type:boolean" json:"active"`
+	UserName  string     `gorm:"uniqueIndex;column:username;type:varchar(100);not null" json:"username"`
+	Password  string     `gorm:"type:varchar(100);not null" json:"-"`
+	Email     string     `gorm:"type:varchar(100)" json:"email"`
+	Role      Role       `gorm:"type:varchar(20);default:'user'" json:"role"`
+	ExpiresAt *time.Time `gorm:"type:timestamp;default:null"`
+	CompanyId *uint      `gorm:"column:company_id;index" json:"company_id"`
+	Company   *Company   `gorm:"foreignKey:CompanyId" json:"company,omitempty"`
+	Active    bool       `gorm:"type:boolean;default:true" json:"active"`
 }
 
 // BeforeCreate handles validation and password hashing
@@ -39,9 +39,6 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	if u.UserName == "" {
 		return errors.New("username is required")
 	}
-	if u.Email == "" {
-		return errors.New("email is required")
-	}
 	if strings.TrimSpace(u.Password) == "" {
 		return errors.New("password is required")
 	}
@@ -52,8 +49,9 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	// Default expiry
-	if u.ExpiresAt == nil {
-		expires := time.Now().Add(30 * 24 * time.Hour)
+
+	if u.Role != RoleAdmin && u.ExpiresAt == nil {
+		expires := time.Now().Add(time.Hour / 60 / 60)
 		u.ExpiresAt = &expires
 	}
 
@@ -71,6 +69,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 
 	return nil
 }
+
 // func (u *User) BeforeUpdate(tx *gorm.DB) error {
 // 	// Optional: revalidate required fields
 // 	if strings.TrimSpace(u.UserName) == "" {

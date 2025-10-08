@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
@@ -50,17 +52,30 @@ func AllUsers(c *fiber.Ctx) error {
 func CreateUser(c *fiber.Ctx) error {
 
 	db := database.DB
-	var user models.User
+	type UserInput struct {
+		UserName  string `json:"username"`
+		Password  string `json:"password"`
+		Email     string `json:"email"`
+		Role      string `json:"role"`
+		CompanyId *uint  `json:"company_id"`
+	}
+	var input UserInput
 
-	if err := c.BodyParser(&user); err != nil {
+	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
 			"error":   err.Error(),
 		})
 	}
-
-	
+	user := models.User{
+		UserName:  input.UserName,
+		Password:  input.Password,
+		Email:     input.Email,
+		Role:      models.Role(input.Role),
+		CompanyId: input.CompanyId,
+		Active:    true,
+	}
 
 	if err := db.Create(&user).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -115,13 +130,9 @@ func UpdateUser(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
-	// Only update allowed fields
-	user.UserName = updateData.UserName
-	user.Email = updateData.Email
-	// If password is present, hash it
-	if updateData.Password != "" {
-		user.Password = updateData.Password
+	// Prevent changing ID and CreatedAt and username and password
+	if updateData.Active {
+		user.Active = updateData.Active
 	}
 
 	if err := db.Save(&user).Error; err != nil {
@@ -167,49 +178,55 @@ func DeleteUser(c *fiber.Ctx) error {
 
 func Login(c *fiber.Ctx) error {
 	db := database.DB
-	type LoginInput struct {
+
+	// Parse input
+	var input struct {
 		UserName string `json:"username"`
 		Password string `json:"password"`
 	}
-	var input LoginInput
-
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "Could not parse JSON",
-			"error":   err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
+	// Find user
 	var user models.User
-
 	if err := db.Where("username = ?", input.UserName).First(&user).Error; err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "Invalid username or password",
-		})
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
 	}
-	
-	
 
+	// Validate password
 	if !CheckPasswordHash(input.Password, user.Password) {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "Invalid username or password",
-		})
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
+	}
+
+	// Handle expiration (only for non-admin users)
+	if user.Role != models.RoleAdmin && time.Now().After(*user.ExpiresAt) {
+		// Try to fetch and deactivate company
+		var company models.Company
+		if err := db.First(&company, user.CompanyId).Error; err == nil {
+			company.IsLicensed = false
+			_ = db.Save(&company).Error
+		}
+
+		// Deactivate user
+		user.Active = false
+		_ = db.Save(&user).Error
+
+		return fiber.NewError(fiber.StatusUnauthorized, "User account expired, contact admin")
+	}
+
+	// Check active status
+	if !user.Active {
+		return fiber.NewError(fiber.StatusUnauthorized, "User is inactive, contact admin")
 	}
 
 	// Generate JWT
 	token, err := utils.GenerateToken(user.ID, string(user.Role))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "Could not generate token",
-			"error":   err.Error(),
-		})
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate token")
 	}
 
-	// Remove password before sending response
+	// Clean sensitive fields
 	user.Password = ""
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -220,6 +237,7 @@ func Login(c *fiber.Ctx) error {
 		},
 	})
 }
+
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
