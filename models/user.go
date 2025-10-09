@@ -24,7 +24,7 @@ type User struct {
 	Password  string     `gorm:"type:varchar(100);not null" json:"-"`
 	Email     string     `gorm:"type:varchar(100)" json:"email"`
 	Role      Role       `gorm:"type:varchar(20);default:'user'" json:"role"`
-	ExpiresAt *time.Time `gorm:"type:timestamp;default:null"`
+	ExpiresAt *time.Time `gorm:"type:timestamp;"`
 	CompanyId *uint      `gorm:"column:company_id;index" json:"company_id"`
 	Company   *Company   `gorm:"foreignKey:CompanyId" json:"company,omitempty"`
 	Active    bool       `gorm:"type:boolean;default:true" json:"active"`
@@ -103,5 +103,5 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 // 		u.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
 // 	}
 
-// 	return nil
-// }
+//		return nil
+//	}

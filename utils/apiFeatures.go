@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -25,7 +26,7 @@ func NewQueryBuilder(db *gorm.DB, query map[string][]string, allowedCols []strin
 func (q *QueryBuilder) Filter() *QueryBuilder {
 	db := q.DB
 	for key, values := range q.Query {
-		key = strings.ToLower(key)
+
 		if key == "page" || key == "sort" || key == "limit" || key == "fields" {
 			continue
 		}
@@ -34,6 +35,8 @@ func (q *QueryBuilder) Filter() *QueryBuilder {
 		}
 
 		value := values[0]
+		fmt.Print(values)
+		fmt.Print(value)
 		field := key
 
 		switch {
@@ -60,7 +63,7 @@ func (q *QueryBuilder) Filter() *QueryBuilder {
 		case strings.HasSuffix(key, "_contains"):
 			field = strings.TrimSuffix(key, "_contains")
 			if q.AllowedCols[field] {
-				db = db.Where(field+" LIKE ?", "%"+value+"%")
+				db = db.Where(field+" ILIKE ?", "%"+value+"%")
 			}
 		default:
 			if q.AllowedCols[field] {

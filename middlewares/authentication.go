@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"slices"
 	"errors"
 	"strings"
 
@@ -79,13 +80,7 @@ func AllowedTo(roles ...string) fiber.Handler {
 		}
 
 		// Check if role is allowed
-		authorized := false
-		for _, r := range roles {
-			if r == role {
-				authorized = true
-				break
-			}
-		}
+		authorized := slices.Contains(roles, role)
 
 		if !authorized {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
