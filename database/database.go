@@ -3,7 +3,9 @@ package database
 import (
 	"log"
 
-	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
+	auth_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/auth"
+	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
+	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -28,7 +30,7 @@ func ConnectDB() *gorm.DB {
 	// Run migrations
 
 	log.Println("🧩 Running migrations...")
-	if err := db.AutoMigrate(&models.User{}, &models.Company{}, &models.CompanyType{}, &models.Office{}); err != nil {
+	if err := db.AutoMigrate(&auth_models.User{}, &company_models.Company{}, &general_models.CompanyType{}, &general_models.Office{}); err != nil {
 		log.Fatal("❌ Migration failed:", err)
 	}
 	log.Println("✅ Migration completed")

@@ -1,11 +1,16 @@
 package routes
 
-import "github.com/gofiber/fiber/v2"
+import (
+	auth_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/auth"
+	company_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/company"
+	general_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/general"
+	"github.com/gofiber/fiber/v2"
+)
 
 func SetupAllRoutes(app *fiber.App) {
 	// Register routes (pass db pointer)
-	app.Route("api/v1", SetupUserRoutes)
-	app.Route("api/v1", SetupCompanyRoutes)
-	app.Route("api/v1", SetupCompanyTypeRoutes)
-	app.Route("api/v1", SetupOfficeRoutes)
+	app.Route("api/v1", auth_routes.SetupUserRoutes)
+	app.Route("api/v1", company_routes.SetupCompanyRoutes)
+	app.Route("api/v1", general_routes.SetupCompanyTypeRoutes)
+	app.Route("api/v1", general_routes.SetupOfficeRoutes)
 }
