@@ -12,7 +12,7 @@ func SetupCompanyTypeRoutes(api fiber.Router) {
 	typeRoute := api.Group("/types")
 	typeRoute.Get("/", handlers.AllCompanyTypes)
 	typeRoute.Post("/", handlers.CreateCompanyType)
-	typeRoute.Get(":id", handlers.GetCompanyType)
-	typeRoute.Patch(":id", handlers.UpdateCompanyType)
-	typeRoute.Delete(":id", handlers.DeleteCompanyType)
+	typeRoute.Get("/:id", handlers.GetCompanyType)
+	typeRoute.Patch(":/id", handlers.UpdateCompanyType)
+	typeRoute.Delete("/:id", handlers.DeleteCompanyType)
 }

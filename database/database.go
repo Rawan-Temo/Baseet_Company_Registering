@@ -30,7 +30,7 @@ func ConnectDB() *gorm.DB {
 	// Run migrations
 
 	log.Println("🧩 Running migrations...")
-	if err := db.AutoMigrate(&auth_models.User{}, &company_models.Company{}, &general_models.CompanyType{}, &general_models.Office{}); err != nil {
+	if err := db.AutoMigrate(&auth_models.User{}, &company_models.Company{}, &general_models.CompanyType{}, &general_models.Office{} , &auth_models.License{} ,&company_models.People{} ,&company_models.CompanyActivity{},&company_models.CompanyActivity{}); err != nil {
 		log.Fatal("❌ Migration failed:", err)
 	}
 	log.Println("✅ Migration completed")

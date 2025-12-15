@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	auth_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/auth"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
@@ -53,16 +54,9 @@ func AllUsers(c *fiber.Ctx) error {
 func CreateUser(c *fiber.Ctx) error {
 
 	db := database.DB
-	type UserInput struct {
-		UserName  string `json:"username"`
-		Password  string `json:"password"`
-		Email     string `json:"email"`
-		Role      string `json:"role"`
-		CompanyId *uint  `json:"company_id"`
-	}
-	var input UserInput
+	var req dtos.CreateUserRequest
 
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
@@ -70,12 +64,11 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 	user := auth_models.User{
-		UserName:  input.UserName,
-		Password:  input.Password,
-		Email:     input.Email,
-		Role:      auth_models.Role(input.Role),
-		CompanyId: input.CompanyId,
-		Active:    true,
+		UserName:  req.UserName,
+		Password:  req.Password,
+		Email:     req.Email,
+		Role:      auth_models.Role(req.Role),
+		CompanyId: req.CompanyId,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
@@ -86,9 +79,21 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
+	response := dtos.UserResponse{
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CompanyId: user.CompanyId,
+		Active:    user.Active,
+		ExpiresAt: user.ExpiresAt,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
-		"data":   user,
+		"data":   response,
 	})
 
 }
@@ -105,9 +110,21 @@ func SingleUser(c *fiber.Ctx) error {
 		})
 	}
 
+	response := dtos.UserResponse{
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CompanyId: user.CompanyId,
+		Active:    user.Active,
+		ExpiresAt: user.ExpiresAt,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   user,
+		"data":   response,
 	})
 }
 func UpdateUser(c *fiber.Ctx) error {
@@ -123,17 +140,23 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	var updateData auth_models.User
-	if err := c.BodyParser(&updateData); err != nil {
+	var req dtos.UpdateUserRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Could not parse json",
 			"error":   err.Error(),
 		})
 	}
-	// Prevent changing ID and CreatedAt and username and password
-	if updateData.Active {
-		user.Active = updateData.Active
+
+	if req.Active != nil {
+		user.Active = *req.Active
+	}
+	if req.Email != nil {
+		user.Email = *req.Email
+	}
+	if req.Role != nil {
+		user.Role = auth_models.Role(*req.Role)
 	}
 
 	if err := db.Save(&user).Error; err != nil {
@@ -144,9 +167,21 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
+	response := dtos.UserResponse{
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CompanyId: user.CompanyId,
+		Active:    user.Active,
+		ExpiresAt: user.ExpiresAt,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   user,
+		"data":   response,
 	})
 }
 
@@ -181,22 +216,19 @@ func Login(c *fiber.Ctx) error {
 	
 	db := database.DB
 	// Parse input
-	var input struct {
-		UserName string `json:"username"`
-		Password string `json:"password"`
-	}
-	if err := c.BodyParser(&input); err != nil {
+	var req dtos.LoginRequest
+	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
 	// Find user
 	var user auth_models.User
-	if err := db.Where("username = ?", input.UserName).First(&user).Error; err != nil {
+	if err := db.Where("username = ?", req.UserName).First(&user).Error; err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
 	}
 
 	// Validate password
-	if !CheckPasswordHash(input.Password, user.Password) {
+	if !CheckPasswordHash(req.Password, user.Password) {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
 	}
 
@@ -230,12 +262,26 @@ func Login(c *fiber.Ctx) error {
 	// Clean sensitive fields
 	user.Password = ""
 
+	userResponse := dtos.UserResponse{
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CompanyId: user.CompanyId,
+		Active:    user.Active,
+		ExpiresAt: user.ExpiresAt,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	loginResponse := dtos.LoginResponse{
+		User:  userResponse,
+		Token: token,
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data": fiber.Map{
-			"user":  user,
-			"token": token,
-		},
+		"data":   loginResponse,
 	})
 }
 

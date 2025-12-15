@@ -52,7 +52,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	// Default expiry
 
 	if u.Role != RoleAdmin && u.ExpiresAt == nil {
-		expires := time.Now().Add(time.Hour / 60 / 60)
+		expires := time.Now().Add(24 * time.Hour)
 		u.ExpiresAt = &expires
 	}
 
@@ -71,38 +71,3 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// func (u *User) BeforeUpdate(tx *gorm.DB) error {
-// 	// Optional: revalidate required fields
-// 	if strings.TrimSpace(u.UserName) == "" {
-// 		return errors.New("username cannot be empty")
-// 	}
-// 	if strings.TrimSpace(u.Email) == "" {
-// 		return errors.New("email cannot be empty")
-// 	}
-
-// 	// Optional: company validation for non-admins
-// 	if u.Role != RoleAdmin && u.CompanyId == nil {
-// 		return errors.New("company_id is required for non-admin users")
-// 	}
-
-// 	// Ensure role is valid
-// 	if u.Role != RoleAdmin && u.Role != RoleUser {
-// 		u.Role = RoleUser
-// 	}
-
-// 	// Hash password only if changed (so we don’t double-hash)
-// 	if tx.Statement.Changed("Password") {
-// 		hashed, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		u.Password = string(hashed)
-// 	}
-
-// 	// Optional: extend expiry when updated
-// 	if u.ExpiresAt.IsZero() {
-// 		u.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
-// 	}
-
-//		return nil
-//	}

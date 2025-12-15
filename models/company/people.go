@@ -1,6 +1,8 @@
 package company_models
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 )
 
@@ -19,13 +21,12 @@ type People struct {
     Role      string `gorm:"type:varchar(50);not null" json:"role"` // "Partner", "AuthorizedRep", "BoardMember", "StakeHolder"
 }
 
-func (p *People) BeforeCreate(tx *gorm.DB) (err error) {
-    var existing People
-    if err := tx.Where("email = ?", p.Email).First(&existing).Error; err == nil {
-        // Person exists, cancel creation and set ID to existing
-        p.ID = existing.ID
-        // Stop creating a new row
-        return gorm.ErrRegistered
-    }
-    return nil
+func (p *People) BeforeCreate(tx *gorm.DB) error {
+	if p.FullName == "" {
+		return errors.New("full_name is required")
+	}
+	if p.Role == "" {
+		return errors.New("role is required")
+	}
+	return nil
 }

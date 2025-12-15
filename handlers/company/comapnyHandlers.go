@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
@@ -42,14 +43,29 @@ func AllCompanies(c *fiber.Ctx) error {
 func CreateCompany(c *fiber.Ctx) error {
 
 	db := database.DB
-	var company company_models.Company
-	if err := c.BodyParser(&company); err != nil {
+	var req dtos.CreateCompanyRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
 			"error":   err.Error(),
 		})
 	}
+
+	company := company_models.Company{
+		Name:            req.Name,
+		TradeNames:      req.TradeNames,
+		LocalIdentifier: req.LocalIdentifier,
+		Address:         req.Address,
+		Description:     req.Description,
+		Email:           req.Email,
+		PhoneNumber:     req.PhoneNumber,
+		CompanyTypeID:   req.CompanyTypeID,
+		OfficeId:        req.OfficeId,
+		IsLicensed:      req.IsLicensed,
+		Duration:        req.Duration,
+	}
+
 	if err := db.Create(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
@@ -57,10 +73,28 @@ func CreateCompany(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+
+	response := dtos.CompanyResponse{
+		ID:              company.ID,
+		Name:            company.Name,
+		TradeNames:      company.TradeNames,
+		LocalIdentifier: company.LocalIdentifier,
+		Address:         company.Address,
+		Description:     company.Description,
+		Email:           company.Email,
+		PhoneNumber:     company.PhoneNumber,
+		CompanyTypeID:   company.CompanyTypeID,
+		OfficeId:        company.OfficeId,
+		IsLicensed:      company.IsLicensed,
+		Duration:        company.Duration,
+		CreatedAt:       company.CreatedAt,
+		UpdatedAt:       company.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Company created successfully",
-		"data":    company,
+		"data":    response,
 	})
 }
 
@@ -77,9 +111,26 @@ func SingleCompany(c *fiber.Ctx) error {
 		})
 	}
 
+	response := dtos.CompanyResponse{
+		ID:              company.ID,
+		Name:            company.Name,
+		TradeNames:      company.TradeNames,
+		LocalIdentifier: company.LocalIdentifier,
+		Address:         company.Address,
+		Description:     company.Description,
+		Email:           company.Email,
+		PhoneNumber:     company.PhoneNumber,
+		CompanyTypeID:   company.CompanyTypeID,
+		OfficeId:        company.OfficeId,
+		IsLicensed:      company.IsLicensed,
+		Duration:        company.Duration,
+		CreatedAt:       company.CreatedAt,
+		UpdatedAt:       company.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   company,
+		"data":   response,
 	})
 }
 func UpdateCompany(c *fiber.Ctx) error {
@@ -95,9 +146,9 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse dynamic JSON body into a map
-	var updateData map[string]interface{}
-	if err := c.BodyParser(&updateData); err != nil {
+	// Parse dynamic JSON body into a DTO
+	var req dtos.UpdateCompanyRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Invalid request body",
@@ -105,25 +156,36 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	// // ✅ Optional: Restrict allowed fields
-	// allowedFields := map[string]bool{
-	// 	"name":        true,
-	// 	"isLicensed":  true,
-	// 	"isLicensed":  true,
-	// 	"isLicensed":  true,
-	// 	"isLicensed":  true,
-	// 	"isLicensed":  true,
-	// 	"description": true,
-	// }
+	// Update only provided fields
+	if req.Name != nil {
+		company.Name = *req.Name
+	}
+	if req.TradeNames != nil {
+		company.TradeNames = *req.TradeNames
+	}
+	if req.LocalIdentifier != nil {
+		company.LocalIdentifier = *req.LocalIdentifier
+	}
+	if req.Address != nil {
+		company.Address = *req.Address
+	}
+	if req.Description != nil {
+		company.Description = *req.Description
+	}
+	if req.Email != nil {
+		company.Email = *req.Email
+	}
+	if req.PhoneNumber != nil {
+		company.PhoneNumber = *req.PhoneNumber
+	}
+	if req.IsLicensed != nil {
+		company.IsLicensed = *req.IsLicensed
+	}
+	if req.Duration != nil {
+		company.Duration = *req.Duration
+	}
 
-	// for key := range updateData {
-	// 	if !allowedFields[key] {
-	// 		delete(updateData, key) // ignore disallowed fields
-	// 	}
-	// }
-
-	// ✅ Perform the update (updates only provided fields)
-	if err := db.Model(&company).Updates(updateData).Error; err != nil {
+	if err := db.Save(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Could not update company",
@@ -131,12 +193,26 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	// Refresh updated record
-	db.First(&company, id)
+	response := dtos.CompanyResponse{
+		ID:              company.ID,
+		Name:            company.Name,
+		TradeNames:      company.TradeNames,
+		LocalIdentifier: company.LocalIdentifier,
+		Address:         company.Address,
+		Description:     company.Description,
+		Email:           company.Email,
+		PhoneNumber:     company.PhoneNumber,
+		CompanyTypeID:   company.CompanyTypeID,
+		OfficeId:        company.OfficeId,
+		IsLicensed:      company.IsLicensed,
+		Duration:        company.Duration,
+		CreatedAt:       company.CreatedAt,
+		UpdatedAt:       company.UpdatedAt,
+	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   company,
+		"data":   response,
 	})
 }
 func DeleteCompany(c *fiber.Ctx) error {

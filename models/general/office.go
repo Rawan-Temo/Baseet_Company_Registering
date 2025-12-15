@@ -2,6 +2,7 @@ package general_models
 
 import (
 	"errors"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -12,10 +13,8 @@ type Office struct {
 }
 
 func (o *Office) BeforeCreate(tx *gorm.DB) error {
-	// check if name exists
-	if o.Name == "" {
+	if strings.TrimSpace(o.Name) == "" {
 		return errors.New("name is required")
 	}
-	o.ID = 0
 	return nil
 }

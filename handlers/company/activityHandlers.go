@@ -2,23 +2,21 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
-	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
+	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-func AllCompanyTypes(c *fiber.Ctx) error {
+func AllTradingActivity(c *fiber.Ctx) error {
 	db := database.DB
 	var total int64
-	var companyTypes []general_models.CompanyType
+	var tradingActivities []company_models.TradingActivity
 	queryArgs := c.Context().QueryArgs()
-	fmt.Println(queryArgs)
 	queries := map[string][]string{}
 
 	queryArgs.VisitAll(func(key, value []byte) {
@@ -29,16 +27,16 @@ func AllCompanyTypes(c *fiber.Ctx) error {
 	allowedCols := []string{"name", "ID", "created_at", "updated_at", "deleted_at"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
-	if err := queryBuilder.Apply().Find(&companyTypes).Error; err != nil {
+	if err := queryBuilder.Apply().Find(&tradingActivities).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to fetch companyTypes",
+			"error":   "Failed to fetch trading activities",
 			"details": err.Error(),
 		})
 	}
-	// count total companyTypes
-	if err := utils.NewQueryBuilder(db, queries, allowedCols).Filter().Apply().Model(&general_models.CompanyType{}).Count(&total).Error; err != nil {
+	// count total trading activities
+	if err := utils.NewQueryBuilder(db, queries, allowedCols).Filter().Apply().Model(&company_models.TradingActivity{}).Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to count companyTypes",
+			"error":   "Failed to count trading activities",
 			"details": err.Error(),
 		})
 	}
@@ -46,13 +44,14 @@ func AllCompanyTypes(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"total":   total,
-		"results": len(companyTypes),
-		"data":    companyTypes,
+		"results": len(tradingActivities),
+		"data":    tradingActivities,
 	})
 }
-func CreateCompanyType(c *fiber.Ctx) error {
+
+func CreateTradingActivity(c *fiber.Ctx) error {
 	db := database.DB
-	var req dtos.CreateCompanyTypeRequest
+	var req dtos.CreateTradingActivityRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"status":  "fail",
@@ -61,12 +60,11 @@ func CreateCompanyType(c *fiber.Ctx) error {
 		})
 	}
 
-	companyType := general_models.CompanyType{
+	activity := company_models.TradingActivity{
 		Name: req.Name,
 	}
 
-	if err := db.Create(&companyType).Error; err != nil {
-
+	if err := db.Create(&activity).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate key value") {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"status":  "fail",
@@ -75,16 +73,16 @@ func CreateCompanyType(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "fail",
-			"message": "could not create type",
+			"message": "could not create trading activity",
 			"error":   err.Error(),
 		})
 	}
 
-	response := dtos.CompanyTypeResponse{
-		ID:        companyType.ID,
-		Name:      companyType.Name,
-		CreatedAt: companyType.CreatedAt,
-		UpdatedAt: companyType.UpdatedAt,
+	response := dtos.TradingActivityResponse{
+		ID:        activity.ID,
+		Name:      activity.Name,
+		CreatedAt: activity.CreatedAt,
+		UpdatedAt: activity.UpdatedAt,
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -92,26 +90,27 @@ func CreateCompanyType(c *fiber.Ctx) error {
 		"data":   response,
 	})
 }
-func GetCompanyType(c *fiber.Ctx) error {
+
+func GetTradingActivityByID(c *fiber.Ctx) error {
 	db := database.DB
-	var companyType general_models.CompanyType
+	var tradingActivity company_models.TradingActivity
 	id := c.Params("id")
-	if err := db.First(&companyType, id).Error; err != nil {
+	if err := db.First(&tradingActivity, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "Company not found",
+				"error": "Trading activity not found",
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch company",
+			"error": "Failed to fetch trading activity",
 		})
 	}
 
-	response := dtos.CompanyTypeResponse{
-		ID:        companyType.ID,
-		Name:      companyType.Name,
-		CreatedAt: companyType.CreatedAt,
-		UpdatedAt: companyType.UpdatedAt,
+	response := dtos.TradingActivityResponse{
+		ID:        tradingActivity.ID,
+		Name:      tradingActivity.Name,
+		CreatedAt: tradingActivity.CreatedAt,
+		UpdatedAt: tradingActivity.UpdatedAt,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -120,11 +119,11 @@ func GetCompanyType(c *fiber.Ctx) error {
 	})
 }
 
-func UpdateCompanyType(c *fiber.Ctx) error {
+func UpdateTradingActivity(c *fiber.Ctx) error {
 	id := c.Params("id")
 	db := database.DB
 
-	var req dtos.UpdateCompanyTypeRequest
+	var req dtos.UpdateTradingActivityRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON",
@@ -135,51 +134,49 @@ func UpdateCompanyType(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No valid fields"})
 	}
 
-	var companyType general_models.CompanyType
-	res := db.Model(&companyType).Where("id = ?", id).Updates(map[string]interface{}{"name": *req.Name})
+	var tradingActivity company_models.TradingActivity
+	res := db.Model(&tradingActivity).Where("id = ?", id).Updates(map[string]interface{}{"name": *req.Name})
 	if res.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Update failed"})
 	}
 	if res.RowsAffected == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Company not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Trading activity not found"})
 	}
-	if err := db.First(&companyType, id).Error; err != nil {
+	if err := db.First(&tradingActivity, id).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Fetch after update failed"})
 	}
 
-	response := dtos.CompanyTypeResponse{
-		ID:        companyType.ID,
-		Name:      companyType.Name,
-		CreatedAt: companyType.CreatedAt,
-		UpdatedAt: companyType.UpdatedAt,
+	response := dtos.TradingActivityResponse{
+		ID:        tradingActivity.ID,
+		Name:      tradingActivity.Name,
+		CreatedAt: tradingActivity.CreatedAt,
+		UpdatedAt: tradingActivity.UpdatedAt,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Company updated successfully",
+		"message": "Trading activity updated successfully",
 		"data":    response,
 	})
 }
 
-// DELETE /company-types/:id
-func DeleteCompanyType(c *fiber.Ctx) error {
+func DeleteTradingActivity(c *fiber.Ctx) error {
 	id := c.Params("id")
 	db := database.DB
-
 	// Use RowsAffected to check if the record exists
-	res := db.Delete(&general_models.CompanyType{}, id)
+	res := db.Delete(&company_models.TradingActivity{}, id)
 	if res.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to delete CompanyType",
+			"error": "Failed to delete Trading activity",
 		})
 	}
 
 	if res.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "CompanyType not found",
+			"error": "Trading activity not found",
 		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "CompanyType deleted successfully",
+		"message": "Trading activity deleted successfully",
 	})
 }
