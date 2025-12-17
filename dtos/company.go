@@ -6,8 +6,8 @@ import "time"
 type CreateCompanyRequest struct {
 	Name            string `json:"name" validate:"required,max=100"`
 	TradeNames      string `json:"trade_names" validate:"max=200"`
-	LocalIdentifier string `json:"local_identifier" validate:"max=100"`
-	Address         string `json:"address" validate:"required,max=200"`
+	AuthorityNumber string `json:"authority_number" validate:"max=100"`
+	LocalAddress    string `json:"local_address" validate:"required,max=200"`
 	Description     string `json:"description" validate:"max=500"`
 	Email           string `json:"email" validate:"omitempty,email"`
 	PhoneNumber     string `json:"phone_number" validate:"max=15"`
@@ -20,8 +20,8 @@ type CreateCompanyRequest struct {
 type UpdateCompanyRequest struct {
 	Name            *string `json:"name" validate:"omitempty,max=100"`
 	TradeNames      *string `json:"trade_names" validate:"omitempty,max=200"`
-	LocalIdentifier *string `json:"local_identifier" validate:"omitempty,max=100"`
-	Address         *string `json:"address" validate:"omitempty,max=200"`
+	AuthorityNumber *string `json:"authority_number" validate:"omitempty,max=100"`
+	LocalAddress    *string `json:"local_address" validate:"omitempty,max=200"`
 	Description     *string `json:"description" validate:"omitempty,max=500"`
 	Email           *string `json:"email" validate:"omitempty,email"`
 	PhoneNumber     *string `json:"phone_number" validate:"omitempty,max=15"`
@@ -33,8 +33,8 @@ type CompanyResponse struct {
 	ID              uint      `json:"id"`
 	Name            string    `json:"name"`
 	TradeNames      string    `json:"trade_names"`
-	LocalIdentifier string    `json:"local_identifier"`
-	Address         string    `json:"address"`
+	AuthorityNumber string    `json:"authority_number"`
+	LocalAddress    string    `json:"local_address"`
 	Description     string    `json:"description"`
 	Email           string    `json:"email"`
 	PhoneNumber     string    `json:"phone_number"`

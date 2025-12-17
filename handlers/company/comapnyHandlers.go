@@ -55,8 +55,8 @@ func CreateCompany(c *fiber.Ctx) error {
 	company := company_models.Company{
 		Name:            req.Name,
 		TradeNames:      req.TradeNames,
-		LocalIdentifier: req.LocalIdentifier,
-		Address:         req.Address,
+		AuthorityNumber: req.AuthorityNumber,
+		LocalAddress:    req.LocalAddress,
 		Description:     req.Description,
 		Email:           req.Email,
 		PhoneNumber:     req.PhoneNumber,
@@ -78,8 +78,8 @@ func CreateCompany(c *fiber.Ctx) error {
 		ID:              company.ID,
 		Name:            company.Name,
 		TradeNames:      company.TradeNames,
-		LocalIdentifier: company.LocalIdentifier,
-		Address:         company.Address,
+		AuthorityNumber: company.AuthorityNumber,
+		LocalAddress:         company.LocalAddress,
 		Description:     company.Description,
 		Email:           company.Email,
 		PhoneNumber:     company.PhoneNumber,
@@ -115,8 +115,8 @@ func SingleCompany(c *fiber.Ctx) error {
 		ID:              company.ID,
 		Name:            company.Name,
 		TradeNames:      company.TradeNames,
-		LocalIdentifier: company.LocalIdentifier,
-		Address:         company.Address,
+		AuthorityNumber: company.AuthorityNumber,
+		LocalAddress:    company.LocalAddress,
 		Description:     company.Description,
 		Email:           company.Email,
 		PhoneNumber:     company.PhoneNumber,
@@ -163,11 +163,11 @@ func UpdateCompany(c *fiber.Ctx) error {
 	if req.TradeNames != nil {
 		company.TradeNames = *req.TradeNames
 	}
-	if req.LocalIdentifier != nil {
-		company.LocalIdentifier = *req.LocalIdentifier
+	if req.AuthorityNumber != nil {
+		company.AuthorityNumber = *req.AuthorityNumber
 	}
-	if req.Address != nil {
-		company.Address = *req.Address
+	if req.LocalAddress != nil {
+		company.LocalAddress = *req.LocalAddress
 	}
 	if req.Description != nil {
 		company.Description = *req.Description
@@ -197,8 +197,8 @@ func UpdateCompany(c *fiber.Ctx) error {
 		ID:              company.ID,
 		Name:            company.Name,
 		TradeNames:      company.TradeNames,
-		LocalIdentifier: company.LocalIdentifier,
-		Address:         company.Address,
+		AuthorityNumber: company.AuthorityNumber,
+		LocalAddress:    company.LocalAddress,
 		Description:     company.Description,
 		Email:           company.Email,
 		PhoneNumber:     company.PhoneNumber,
