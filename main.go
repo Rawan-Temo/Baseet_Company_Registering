@@ -16,11 +16,11 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️  No .env file found, using defaults")
 	}
-	database.ConnectDB()
 	app := fiber.New()
 	app.Use(logger.New())
 	// Connect DB
-	// database.ConnectDB()
+	
+	database.ConnectDB()
 	routes.SetupAllRoutes(app)
 
 

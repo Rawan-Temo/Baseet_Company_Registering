@@ -19,6 +19,7 @@ type People struct {
     Phone     string `gorm:"type:varchar(50)" json:"phone"`
     Address   string `gorm:"type:varchar(500)" json:"address"`
     Role      string `gorm:"type:varchar(50);not null" json:"role"` // "Partner", "AuthorizedRep", "BoardMember", "StakeHolder"
+	ExtraDetails string `gorm:"type:text" json:"extra_details"`
 }
 
 func (p *People) BeforeCreate(tx *gorm.DB) error {

@@ -19,14 +19,28 @@ type Company struct {
 	Name            string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
 	// الاسم الرسمي للشركة
 
+	ForeignBranchName string `gorm:"type:varchar(200);not null" json:"foreign_branch_name"`
+	// اسم الفرع الأجنبي إن وجد
+
+	ForeignRegistrationNumber string `gorm:"type:varchar(50);not null" json:"foreign_registration_number"`
+	// رقم التسجيل
+
 	TradeNames      string `gorm:"type:varchar(200)" json:"trade_names"`
 	// الاسم (الأسماء) التجارية إن وجد
 
-	LocalIdentifier string `gorm:"type:varchar(100)" json:"local_identifier"`
+	AuthorityName   string `gorm:"type:varchar(100);not null" json:"authority_name" validate:"required"`
+	// اسم الممنوح من هيئة عامة أخرى
+
+
+	AuthorityNumber string `gorm:"type:varchar(100)" json:"authority_number"`
 	// رقم التعريف الممنوح من هيئة عامة أخرى
 
-	Address         string `gorm:"type:varchar(200);not null" json:"address" validate:"required"`
+	LocalAddress         string `gorm:"type:varchar(200);not null" json:"local_address" validate:"required"`
 	// عنوان العمل الرئيسي
+
+	ForeignAddress         string `gorm:"type:varchar(200);not null" json:"foreign_address" `
+	// عنوان العمل الاوروبي
+
 
 	Description     string `gorm:"type:varchar(500)" json:"description"`
 	// وصف النشاط
@@ -60,6 +74,19 @@ type Company struct {
 
 	Duration        string `gorm:"type:varchar(100)" json:"duration"`
 	// مدة الشركة
+
+
+	// ==============================
+	// Default ceo for the company not in the poeple entity but embedded here
+	// ==============================:
+	CEOName     string `gorm:"type:varchar(100)" json:"ceo_name"`
+	// اسم المدير العام
+	CEOPhone    string `gorm:"type:varchar(15)" json:"ceo_phone"`
+	// هاتف المدير العام
+	CEOEmail    string `gorm:"type:varchar(100)" json:"ceo_email"`
+	// ايميل المدير العام
+	CEOAddress  string `gorm:"type:varchar(200)" json:"ceo_address"`
+	// عنوان المدير العام
 }
 
 
@@ -67,7 +94,7 @@ func (c *Company) BeforeCreate(tx *gorm.DB) (err error) {
 
 	// ---------- Basic normalization ----------
 	c.Name = strings.TrimSpace(c.Name)
-	c.Address = strings.TrimSpace(c.Address)
+	c.LocalAddress = strings.TrimSpace(c.LocalAddress)
 	c.Duration = strings.TrimSpace(c.Duration)
 
 	if c.Email != "" {
@@ -79,8 +106,8 @@ func (c *Company) BeforeCreate(tx *gorm.DB) (err error) {
 		return errors.New("company name is required")
 	}
 
-	if c.Address == "" {
-		return errors.New("company address is required")
+	if c.LocalAddress == "" {
+		return errors.New("company local address is required")
 	}
 
 	if c.CompanyTypeID == 0 {

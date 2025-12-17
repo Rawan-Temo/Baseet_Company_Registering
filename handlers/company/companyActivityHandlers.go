@@ -51,6 +51,7 @@ func GetAllCompanyActivities(c *fiber.Ctx) error {
 
 func CreateCompanyActivity(c *fiber.Ctx) error {
 	db := database.DB
+	var company company_models.Company
 	var req dtos.CreateCompanyActivityRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
@@ -64,6 +65,20 @@ func CreateCompanyActivity(c *fiber.Ctx) error {
 		CompanyID:         req.CompanyId,
 		TradingActivityID: req.TradingActivityID,
 		Image:             req.Image,
+	}
+	if err := db.First(&company, companyActivity.CompanyID); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "invalid company id",
+		})
+	}
+
+	if company.CompanyType.Name == "Free"{
+		c.Status(400).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Free type company cannot leggaly have any activities in syria",
+		})
+		return nil
 	}
 
 	if err := db.Create(&companyActivity).Error; err != nil {
