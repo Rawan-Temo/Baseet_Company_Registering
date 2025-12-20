@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
@@ -18,7 +17,6 @@ func AllCompanyTypes(c *fiber.Ctx) error {
 	var total int64
 	var companyTypes []general_models.CompanyType
 	queryArgs := c.Context().QueryArgs()
-	fmt.Println(queryArgs)
 	queries := map[string][]string{}
 
 	queryArgs.VisitAll(func(key, value []byte) {

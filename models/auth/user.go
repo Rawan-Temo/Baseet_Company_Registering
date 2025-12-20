@@ -21,7 +21,8 @@ const (
 // User model
 type User struct {
 	gorm.Model
-	UserName  string     `gorm:"uniqueIndex;column:username;type:varchar(100);not null" json:"username"`
+	UserName  string     `gorm:"type:varchar(50);uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;column:username;type:varchar(100);not null" json:"username"`
+	FullName  string     `gorm:"type:varchar(150);uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;not null" json:"full_name"`
 	Password  string     `gorm:"type:varchar(100);not null" json:"-"`
 	Email     string     `gorm:"type:varchar(100)" json:"email"`
 	Role      Role       `gorm:"type:varchar(20);default:'user'" json:"role"`
@@ -31,12 +32,14 @@ type User struct {
 	Active    bool       `gorm:"type:boolean;default:true" json:"active"`
 }
 
-// BeforeCreate handles validation and password hashing
-func (u *User) BeforeCreate(tx *gorm.DB) error {
+// BeforeSave handles validation and password hashing
+func (u *User) BeforeSave(tx *gorm.DB) error {
 	// Basic required fields
 	u.UserName = strings.TrimSpace(u.UserName)
 	u.Email = strings.ToLower(strings.TrimSpace(u.Email))
-
+	if u.FullName == "" {
+		return errors.New("full_name is required")
+	}
 	if u.UserName == "" {
 		return errors.New("username is required")
 	}

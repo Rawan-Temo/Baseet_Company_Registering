@@ -4,6 +4,7 @@ import "time"
 
 // User DTOs
 type CreateUserRequest struct {
+	FullName  string `json:"full_name" validate:"required,min=3,max=150"`
 	UserName  string `json:"username" validate:"required,min=3,max=100"`
 	Password  string `json:"password" validate:"required,min=6"`
 	Email     string `json:"email" validate:"required,email"`
@@ -12,13 +13,15 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
+	FullName  *string `json:"full_name" validate:"required,min=3,max=150"`
 	Email  *string `json:"email" validate:"omitempty,email"`
+	Password  *string `json:"password" validate:"omitempty,min=6"`
 	Active *bool   `json:"active"`
-	Role   *string `json:"role" validate:"omitempty,oneof=admin user"`
 }
 
 type UserResponse struct {
 	ID        uint       `json:"id"`
+	FullName  string     `json:"full_name"`
 	UserName  string     `json:"username"`
 	Email     string     `json:"email"`
 	Role      string     `json:"role"`

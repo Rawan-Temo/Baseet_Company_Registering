@@ -1,15 +1,20 @@
 package general_routes
 
 import (
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	handlers "github.com/Rawan-Temo/Baseet_Company_Registering.git/handlers/general"
+	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupOfficeRoutes(api fiber.Router) {
-	officeRoute := api.Group("/offices")
-	officeRoute.Get("/", handlers.AllOffices)
-	officeRoute.Post("/", handlers.CreateOffice)
-	officeRoute.Get("/:id", handlers.GetOffice)
-	officeRoute.Patch("/:id", handlers.UpdateOffice)
-	officeRoute.Delete("/:id", handlers.DeleteOffice)
+	officeRouter := api.Group("/offices")
+	officeRouter.Patch("/delete-many", utils.DeleteMany(database.DB , general_models.Office{}))
+	
+	officeRouter.Get("/", handlers.AllOffices)
+	officeRouter.Post("/", handlers.CreateOffice)
+	officeRouter.Get("/:id", handlers.GetOffice)
+	officeRouter.Patch("/:id", handlers.UpdateOffice)
+	officeRouter.Delete("/:id", handlers.DeleteOffice)
 }

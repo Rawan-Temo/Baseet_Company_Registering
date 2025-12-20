@@ -16,13 +16,13 @@ import (
 type Company struct {
 	gorm.Model
 
-	Name            string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	Name            string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(100);not null" json:"name" validate:"required"`
 	// الاسم الرسمي للشركة
 
-	ForeignBranchName string `gorm:"type:varchar(200);not null" json:"foreign_branch_name"`
+	ForeignBranchName string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(200);not null" json:"foreign_branch_name"`
 	// اسم الفرع الأجنبي إن وجد
 
-	ForeignRegistrationNumber string `gorm:"type:varchar(50);not null" json:"foreign_registration_number"`
+	ForeignRegistrationNumber string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(50);not null" json:"foreign_registration_number"`
 	// رقم التسجيل
 
 	TradeNames      string `gorm:"type:varchar(200)" json:"trade_names"`
@@ -45,10 +45,10 @@ type Company struct {
 	Description     string `gorm:"type:varchar(500)" json:"description"`
 	// وصف النشاط
 
-	Email           string `gorm:"uniqueIndex;type:varchar(100)" json:"email" validate:"omitempty,email"`
+	Email           string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(100)" json:"email" validate:"omitempty,email"`
 	// البريد الإلكتروني
 
-	PhoneNumber     string `gorm:"type:varchar(15)" json:"phone_number"`
+	PhoneNumber     string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(20)" json:"phone_number"`
 	// رقم الهاتف
 
 	CompanyTypeID   uint `gorm:"column:type_id;not null;index" json:"type_id" validate:"required"`
@@ -81,7 +81,7 @@ type Company struct {
 	// ==============================:
 	CEOName     string `gorm:"type:varchar(100)" json:"ceo_name"`
 	// اسم المدير العام
-	CEOPhone    string `gorm:"type:varchar(15)" json:"ceo_phone"`
+	CEOPhone    string `gorm:"type:varchar(20)" json:"ceo_phone"`
 	// هاتف المدير العام
 	CEOEmail    string `gorm:"type:varchar(100)" json:"ceo_email"`
 	// ايميل المدير العام
@@ -90,7 +90,7 @@ type Company struct {
 }
 
 
-func (c *Company) BeforeCreate(tx *gorm.DB) (err error) {
+func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 
 	// ---------- Basic normalization ----------
 	c.Name = strings.TrimSpace(c.Name)

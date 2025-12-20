@@ -27,7 +27,7 @@ type License struct {
 	// صورة الترخيص
 }
 
-func (l *License) BeforeCreate(tx *gorm.DB) (err error) {
+func (l *License) BeforeSave(tx *gorm.DB) (err error) {
 
 	// ---------- Required ----------
 	if l.CompanyId == 0 {

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -35,8 +34,6 @@ func (q *QueryBuilder) Filter() *QueryBuilder {
 		}
 
 		value := values[0]
-		fmt.Print(values)
-		fmt.Print(value)
 		field := key
 
 		switch {

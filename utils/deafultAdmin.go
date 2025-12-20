@@ -9,9 +9,10 @@ import (
 
 func CreateDefaultAdmin(db *gorm.DB)error {
 	var user auth_models.User
-	if err := db.Where("role = ?" , auth_models.RoleAdmin).First(&user).Error; err != nil {
+	if err := db.Where("role = ? AND deleted_at IS NULL" , auth_models.RoleAdmin).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			admin := auth_models.User{
+				FullName: "Admin_admin",
 				UserName: "admin",
 				Email:    "admin@example.com",
 				Password: "admin123",

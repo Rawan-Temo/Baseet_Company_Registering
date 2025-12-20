@@ -29,7 +29,7 @@ type CompanyActivity struct {
 	// صورة مرتبطة بالنشاط داخل الشركة
 }
 
-func (ca *CompanyActivity) BeforeCreate(tx *gorm.DB) error {
+func (ca *CompanyActivity) BeforeSave(tx *gorm.DB) error {
 	if ca.CompanyID == 0 {
 		return errors.New("company_id is required")
 	}

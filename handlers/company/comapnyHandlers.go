@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
@@ -18,12 +20,13 @@ func AllCompanies(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"id", "name", "address", "phone", "email", "created_at", "updated_at"}
+	allowedCols := []string{"id", "type_id" , "company_id", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
 	apiFeatures := utils.NewQueryBuilder(db, queries, allowedCols)
 
 	apiFeatures.Filter().Sort().LimitFields().Paginate()
 
-	if err := apiFeatures.Apply().Find(&companies).Error; err != nil {
+	if err := apiFeatures.Apply().Preload("CompanyType").Preload("Office").Find(&companies).Error; err != nil {
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to fetch companies",
 			"details": err.Error(),
@@ -52,6 +55,18 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
+	// people := []company_models.People{}
+	// for _, personReq := range req.People{
+	// 	people = append(people, company_models.People{
+	// 		FullName: personReq.FullName,
+	// 		Email: personReq.Email,
+	// 		Phone: personReq.Phone,
+	// 		Address: personReq.Address,
+	// 		Role: personReq.Role,
+	// 		ExtraDetails: personReq.ExtraDetails,
+	// 	})
+		
+	// }
 	company := company_models.Company{
 		Name:            req.Name,
 		TradeNames:      req.TradeNames,
@@ -63,9 +78,15 @@ func CreateCompany(c *fiber.Ctx) error {
 		CompanyTypeID:   req.CompanyTypeID,
 		OfficeId:        req.OfficeId,
 		IsLicensed:      req.IsLicensed,
+		People:req.People,
+		CEOName:req.CEOName ,
+		CEOPhone: req.CEOPhone,
+		CEOEmail:req.CEOEmail ,
+		CEOAddress: req.CEOAddress,
 		Duration:        req.Duration,
 	}
 
+	fmt.Printf("people : %v ", company)
 	if err := db.Create(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
@@ -86,6 +107,10 @@ func CreateCompany(c *fiber.Ctx) error {
 		CompanyTypeID:   company.CompanyTypeID,
 		OfficeId:        company.OfficeId,
 		IsLicensed:      company.IsLicensed,
+		CEOName:company.CEOName ,
+		CEOPhone: company.CEOPhone,
+		CEOEmail:company.CEOEmail ,
+		CEOAddress: company.CEOAddress,
 		Duration:        company.Duration,
 		CreatedAt:       company.CreatedAt,
 		UpdatedAt:       company.UpdatedAt,
@@ -103,7 +128,7 @@ func SingleCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var company company_models.Company
-	if err := db.First(&company, id).Error; err != nil {
+	if err := db.Preload("CompanyType").Preload("Office").First(&company, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Company not found",

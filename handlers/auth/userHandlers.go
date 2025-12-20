@@ -15,6 +15,7 @@ import (
 func AllUsers(c *fiber.Ctx) error {
 	db := database.DB
 
+	
 	var users []auth_models.User
 	queryArgs := c.Context().QueryArgs()
 	queries := map[string][]string{}
@@ -24,7 +25,7 @@ func AllUsers(c *fiber.Ctx) error {
 		queries[k] = append(queries[k], v)
 	})
 
-	allowedCols := []string{"id", "username", "email", "age", "created_at", "updated_at", "deleted_at"}
+	allowedCols := []string{"id", "full_name","username", "email", "age", "created_at", "updated_at", "deleted_at" , }
 
 	queryBuild := utils.NewQueryBuilder(db, queries, allowedCols)
 
@@ -64,6 +65,7 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 	user := auth_models.User{
+		FullName:  req.FullName,
 		UserName:  req.UserName,
 		Password:  req.Password,
 		Email:     req.Email,
@@ -82,6 +84,7 @@ func CreateUser(c *fiber.Ctx) error {
 	response := dtos.UserResponse{
 		ID:        user.ID,
 		UserName:  user.UserName,
+		FullName:  user.FullName,
 		Email:     user.Email,
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
@@ -112,6 +115,7 @@ func SingleUser(c *fiber.Ctx) error {
 
 	response := dtos.UserResponse{
 		ID:        user.ID,
+		FullName: user.FullName,
 		UserName:  user.UserName,
 		Email:     user.Email,
 		Role:      string(user.Role),
@@ -121,6 +125,7 @@ func SingleUser(c *fiber.Ctx) error {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
+
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
@@ -155,9 +160,14 @@ func UpdateUser(c *fiber.Ctx) error {
 	if req.Email != nil {
 		user.Email = *req.Email
 	}
-	if req.Role != nil {
-		user.Role = auth_models.Role(*req.Role)
+
+	if req.Password != nil {
+		user.Password = *req.Password	
 	}
+	if req.FullName != nil {
+		user.FullName = *req.FullName	
+	}
+
 
 	if err := db.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -223,7 +233,7 @@ func Login(c *fiber.Ctx) error {
 
 	// Find user
 	var user auth_models.User
-	if err := db.Where("username = ?", req.UserName).First(&user).Error; err != nil {
+	if err := db.Where("username = ? And deleted_at IS NULL", req.UserName).First(&user).Error; err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
 	}
 

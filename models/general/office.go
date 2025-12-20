@@ -9,10 +9,10 @@ import (
 
 type Office struct {
 	gorm.Model
-	Name string `gorm:"uniqueIndex;type:varchar(100);not null" json:"name"`
+	Name string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(100);not null" json:"name"`
 }
 
-func (o *Office) BeforeCreate(tx *gorm.DB) error {
+func (o *Office) BeforeSave(tx *gorm.DB) error {
 	if strings.TrimSpace(o.Name) == "" {
 		return errors.New("name is required")
 	}
