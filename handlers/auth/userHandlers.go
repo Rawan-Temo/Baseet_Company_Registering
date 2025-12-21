@@ -264,13 +264,12 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT
-	token, err := utils.GenerateToken(user.ID, string(user.Role))
+	token, err := utils.GenerateToken(user.ID , string(user.Role))
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate token")
 	}
 
 	// Clean sensitive fields
-	user.Password = ""
 
 	userResponse := dtos.UserResponse{
 		ID:        user.ID,
@@ -295,6 +294,33 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
+
+func GetUserFromToken(c *fiber.Ctx) error {
+	database := database.DB
+	currentUser := c.Locals("currentUser").(dtos.UserTokenClaim)
+
+
+	var user auth_models.User
+	database.Where("id = ?", currentUser.UserID).First(&user)
+	var userResponse = dtos.UserResponse{
+		ID:        user.ID,
+		FullName: user.FullName,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CompanyId: user.CompanyId,
+		Active:    user.Active,
+		ExpiresAt: user.ExpiresAt,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   userResponse,
+	})
+}
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil

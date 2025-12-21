@@ -4,6 +4,7 @@ import (
 	"time"
 
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
+	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
 )
 
 // Company DTOs
@@ -31,14 +32,26 @@ type CreateCompanyRequest struct {
 }
 
 type UpdateCompanyRequest struct {
+	// the pointer means that the field is optional mr nullable
 	Name            *string `json:"name" validate:"omitempty,max=100"`
+	ForeignBranchName *string `json:"foreign_branch_name" validate:"required,max=100"`
+	ForeignRegistrationNumber *string `json:"foreign_registration_number" validate:"required,max=100"`
 	TradeNames      *string `json:"trade_names" validate:"omitempty,max=200"`
-	AuthorityNumber *string `json:"authority_number" validate:"omitempty,max=100"`
+	AuthorityName *string `json:"authority_name" validate:"max=100"`
+	AuthorityNumber *string `json:"authority_number" validate:"max=100"`
 	LocalAddress    *string `json:"local_address" validate:"omitempty,max=200"`
+	ForeignAddress    *string `json:"foreign_address" validate:"required,max=200"`
 	Description     *string `json:"description" validate:"omitempty,max=500"`
 	Email           *string `json:"email" validate:"omitempty,email"`
 	PhoneNumber     *string `json:"phone_number" validate:"omitempty,max=15"`
 	IsLicensed      *bool   `json:"is_licensed"`
+	CEOName *string `json:"ceo_name" validate:"max=100"`
+	CEOPhone *string `json:"ceo_phone" validate:"max=20"`
+	CEOEmail *string `json:"ceo_email" validate:"omitempty,email"`
+	CEOAddress *string `json:"ceo_address" validate:"max=200"`
+	CompanyTypeID   *uint   `json:"type_id" validate:"required"`
+	OfficeId        *uint   `json:"office_id" validate:"required"`
+	People 		*[]company_models.People `json:"people"`
 	Duration        *string `json:"duration" validate:"omitempty,max=100"`
 }
 
@@ -53,13 +66,16 @@ type CompanyResponse struct {
 	Email           string    `json:"email"`
 	PhoneNumber     string    `json:"phone_number"`
 	CompanyTypeID   uint      `json:"type_id"`
+	CompanyType      general_models.CompanyType `json:"company_type"`
 	OfficeId        uint      `json:"office_id"`
+	Office      general_models.Office `json:"office"`
 	IsLicensed      bool      `json:"is_licensed"`
 	CEOName         string    `json:"ceo_name"`
 	CEOPhone        string    `json:"ceo_phone"`
 	CEOEmail        string    `json:"ceo_email"`
 	CEOAddress      string    `json:"ceo_address"`
 	Duration        string    `json:"duration"`
+	People         []company_models.People `json:"people"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }

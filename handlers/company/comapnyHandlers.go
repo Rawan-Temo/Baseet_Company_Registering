@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
@@ -55,18 +53,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	// people := []company_models.People{}
-	// for _, personReq := range req.People{
-	// 	people = append(people, company_models.People{
-	// 		FullName: personReq.FullName,
-	// 		Email: personReq.Email,
-	// 		Phone: personReq.Phone,
-	// 		Address: personReq.Address,
-	// 		Role: personReq.Role,
-	// 		ExtraDetails: personReq.ExtraDetails,
-	// 	})
-		
-	// }
+
 	company := company_models.Company{
 		Name:            req.Name,
 		TradeNames:      req.TradeNames,
@@ -86,7 +73,6 @@ func CreateCompany(c *fiber.Ctx) error {
 		Duration:        req.Duration,
 	}
 
-	fmt.Printf("people : %v ", company)
 	if err := db.Create(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
@@ -95,26 +81,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	response := dtos.CompanyResponse{
-		ID:              company.ID,
-		Name:            company.Name,
-		TradeNames:      company.TradeNames,
-		AuthorityNumber: company.AuthorityNumber,
-		LocalAddress:         company.LocalAddress,
-		Description:     company.Description,
-		Email:           company.Email,
-		PhoneNumber:     company.PhoneNumber,
-		CompanyTypeID:   company.CompanyTypeID,
-		OfficeId:        company.OfficeId,
-		IsLicensed:      company.IsLicensed,
-		CEOName:company.CEOName ,
-		CEOPhone: company.CEOPhone,
-		CEOEmail:company.CEOEmail ,
-		CEOAddress: company.CEOAddress,
-		Duration:        company.Duration,
-		CreatedAt:       company.CreatedAt,
-		UpdatedAt:       company.UpdatedAt,
-	}
+	response := GetCompanyResponse(company)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
@@ -128,7 +95,7 @@ func SingleCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var company company_models.Company
-	if err := db.Preload("CompanyType").Preload("Office").First(&company, id).Error; err != nil {
+	if err := db.Preload("CompanyType").Preload("Office").Preload("People").First(&company, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Company not found",
@@ -136,23 +103,8 @@ func SingleCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	response := dtos.CompanyResponse{
-		ID:              company.ID,
-		Name:            company.Name,
-		TradeNames:      company.TradeNames,
-		AuthorityNumber: company.AuthorityNumber,
-		LocalAddress:    company.LocalAddress,
-		Description:     company.Description,
-		Email:           company.Email,
-		PhoneNumber:     company.PhoneNumber,
-		CompanyTypeID:   company.CompanyTypeID,
-		OfficeId:        company.OfficeId,
-		IsLicensed:      company.IsLicensed,
-		Duration:        company.Duration,
-		CreatedAt:       company.CreatedAt,
-		UpdatedAt:       company.UpdatedAt,
-	}
-
+	response := GetCompanyResponse(company)
+		
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   response,
@@ -181,34 +133,13 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update only provided fields
-	if req.Name != nil {
-		company.Name = *req.Name
-	}
-	if req.TradeNames != nil {
-		company.TradeNames = *req.TradeNames
-	}
-	if req.AuthorityNumber != nil {
-		company.AuthorityNumber = *req.AuthorityNumber
-	}
-	if req.LocalAddress != nil {
-		company.LocalAddress = *req.LocalAddress
-	}
-	if req.Description != nil {
-		company.Description = *req.Description
-	}
-	if req.Email != nil {
-		company.Email = *req.Email
-	}
-	if req.PhoneNumber != nil {
-		company.PhoneNumber = *req.PhoneNumber
-	}
-	if req.IsLicensed != nil {
-		company.IsLicensed = *req.IsLicensed
-	}
-	if req.Duration != nil {
-		company.Duration = *req.Duration
-	}
+	utils.UpdateStruct(&company, &req)
+	// // Update only provided fields
+	// the utility functions basically does this part for us 
+	// if req.Name != nil {
+	// 	company.Name = *req.Name
+	// }
+
 
 	if err := db.Save(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -217,23 +148,7 @@ func UpdateCompany(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
-	response := dtos.CompanyResponse{
-		ID:              company.ID,
-		Name:            company.Name,
-		TradeNames:      company.TradeNames,
-		AuthorityNumber: company.AuthorityNumber,
-		LocalAddress:    company.LocalAddress,
-		Description:     company.Description,
-		Email:           company.Email,
-		PhoneNumber:     company.PhoneNumber,
-		CompanyTypeID:   company.CompanyTypeID,
-		OfficeId:        company.OfficeId,
-		IsLicensed:      company.IsLicensed,
-		Duration:        company.Duration,
-		CreatedAt:       company.CreatedAt,
-		UpdatedAt:       company.UpdatedAt,
-	}
+	response := GetCompanyResponse(company)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
@@ -265,4 +180,32 @@ func DeleteCompany(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Company deleted successfully",
 	})
+}
+
+
+
+func GetCompanyResponse(company company_models.Company) dtos.CompanyResponse {
+	return dtos.CompanyResponse{
+		ID:              company.ID,
+		Name:            company.Name,
+		TradeNames:      company.TradeNames,
+		AuthorityNumber: company.AuthorityNumber,
+		LocalAddress:         company.LocalAddress,
+		Description:     company.Description,
+		Email:           company.Email,
+		PhoneNumber:     company.PhoneNumber,
+		CompanyTypeID:   company.CompanyTypeID,
+		CompanyType:   company.CompanyType,
+		OfficeId:        company.OfficeId,
+		Office:        company.Office,
+		IsLicensed:      company.IsLicensed,
+		CEOName:company.CEOName ,
+		CEOPhone: company.CEOPhone,
+		CEOEmail:company.CEOEmail ,
+		CEOAddress: company.CEOAddress,
+		Duration:        company.Duration,
+		People : company.People,
+		CreatedAt:       company.CreatedAt,
+		UpdatedAt:       company.UpdatedAt,
+	}
 }

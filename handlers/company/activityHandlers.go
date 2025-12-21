@@ -78,12 +78,7 @@ func CreateTradingActivity(c *fiber.Ctx) error {
 		})
 	}
 
-	response := dtos.TradingActivityResponse{
-		ID:        activity.ID,
-		Name:      activity.Name,
-		CreatedAt: activity.CreatedAt,
-		UpdatedAt: activity.UpdatedAt,
-	}
+		response := GetTradingResponse(activity)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
@@ -105,14 +100,9 @@ func GetTradingActivityByID(c *fiber.Ctx) error {
 			"error": "Failed to fetch trading activity",
 		})
 	}
+	response := GetTradingResponse(tradingActivity)
 
-	response := dtos.TradingActivityResponse{
-		ID:        tradingActivity.ID,
-		Name:      tradingActivity.Name,
-		CreatedAt: tradingActivity.CreatedAt,
-		UpdatedAt: tradingActivity.UpdatedAt,
-	}
-
+	
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   response,
@@ -146,12 +136,7 @@ func UpdateTradingActivity(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Fetch after update failed"})
 	}
 
-	response := dtos.TradingActivityResponse{
-		ID:        tradingActivity.ID,
-		Name:      tradingActivity.Name,
-		CreatedAt: tradingActivity.CreatedAt,
-		UpdatedAt: tradingActivity.UpdatedAt,
-	}
+	response := GetTradingResponse(tradingActivity)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Trading activity updated successfully",
@@ -179,4 +164,14 @@ func DeleteTradingActivity(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Trading activity deleted successfully",
 	})
+}
+
+
+func GetTradingResponse(activity company_models.TradingActivity) dtos.TradingActivityResponse{
+	return dtos.TradingActivityResponse{
+		ID: activity.ID,
+		Name:              activity.Name,
+		CreatedAt:         activity.CreatedAt,
+		UpdatedAt:         activity.UpdatedAt,
+	}
 }

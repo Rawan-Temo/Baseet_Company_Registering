@@ -7,10 +7,13 @@ import (
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
-
+// TODOO : company activities , trading activities , people routes protect them with authentication middleware
+// TODOO : handlers for licenses  companyActivities middle table check the copilot media handlers maybe he screwed up something 
+// TODOO : 
 func main() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
@@ -18,8 +21,10 @@ func main() {
 	}
 	app := fiber.New()
 	app.Use(logger.New())
+	app.Use(cors.New())
+
+	app.Static("/", "./uploads")
 	// Connect DB
-	
 	database.ConnectDB()
 	routes.SetupAllRoutes(app)
 

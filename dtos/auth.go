@@ -11,7 +11,12 @@ type CreateUserRequest struct {
 	Role      string `json:"role" validate:"required,oneof=admin user"`
 	CompanyId *uint  `json:"company_id"`
 }
-
+type UserTokenClaim struct {
+	UserID uint   `json:"user_id"`
+	Role   string `json:"role"`
+	Exp  int64  `json:"exp"`
+	Iat  int64  `json:"iat"`
+}
 type UpdateUserRequest struct {
 	FullName  *string `json:"full_name" validate:"required,min=3,max=150"`
 	Email  *string `json:"email" validate:"omitempty,email"`

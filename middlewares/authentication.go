@@ -1,10 +1,11 @@
 package middlewares
 
 import (
-	"slices"
 	"errors"
+	"slices"
 	"strings"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -50,6 +51,13 @@ func IsAuthenticated(c *fiber.Ctx) error {
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
+
+	currentUser := dtos.UserTokenClaim{
+		UserID: uint(claims["user_id"].(float64)),
+		Role:   claims["role"].(string),
+		Exp:    int64(claims["exp"].(float64)),
+		Iat:    int64(claims["iat"].(float64)),
+	}
 	if !ok || !token.Valid {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"status":  "fail",
@@ -57,7 +65,7 @@ func IsAuthenticated(c *fiber.Ctx) error {
 		})
 	}
 
-	c.Locals("currentUser", claims)
+	c.Locals("currentUser", currentUser)
 	return c.Next()
 }
 func AllowedTo(roles ...string) fiber.Handler {
