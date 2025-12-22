@@ -59,6 +59,13 @@ func CreatePerson(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 
 	person := company_models.People{
 		CompanyID: req.CompanyID,
@@ -144,6 +151,14 @@ func UpdatePerson(c *fiber.Ctx) error {
 			"error": "Invalid JSON",
 		})
 	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
+
 
 	var person company_models.People
 	if err := db.First(&person, id).Error; err != nil {

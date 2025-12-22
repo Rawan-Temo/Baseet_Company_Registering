@@ -53,6 +53,13 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 
 	company := company_models.Company{
 		Name:            req.Name,
@@ -133,6 +140,13 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	utils.UpdateStruct(&company, &req)
 	// // Update only provided fields
 	// the utility functions basically does this part for us 

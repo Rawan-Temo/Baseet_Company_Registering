@@ -59,6 +59,13 @@ func CreateDocument(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 
 	document := media_models.Document{
 		Src:         req.Src,
@@ -133,6 +140,13 @@ func UpdateDocument(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON",
+		})
+	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
 		})
 	}
 

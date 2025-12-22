@@ -64,6 +64,13 @@ func CreateUser(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	user := auth_models.User{
 		FullName:  req.FullName,
 		UserName:  req.UserName,
@@ -153,6 +160,13 @@ func UpdateUser(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 
 	if req.Active != nil {
 		user.Active = *req.Active
@@ -230,7 +244,13 @@ func Login(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
-
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	// Find user
 	var user auth_models.User
 	if err := db.Where("username = ? And deleted_at IS NULL", req.UserName).First(&user).Error; err != nil {
@@ -324,4 +344,10 @@ func GetUserFromToken(c *fiber.Ctx) error {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+
+
+func RegisterNewCompany(c *fiber.Ctx)error{
+	return c.SendString("test")
 }

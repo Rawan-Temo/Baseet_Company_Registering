@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
-
 func AllOffices(c *fiber.Ctx) error {
 	db := database.DB
 	var total int64
@@ -60,6 +59,13 @@ func CreateOffice(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	office := general_models.Office{
 		Name: req.Name,
 	}
@@ -129,10 +135,14 @@ func UpdateOffice(c *fiber.Ctx) error {
 			"error": "Invalid JSON",
 		})
 	}
-
-	if req.Name == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No valid fields"})
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
 	}
+
 
 	var office general_models.Office
 	res := db.Model(&office).Where("id = ?", id).Updates(map[string]interface{}{"name": *req.Name})

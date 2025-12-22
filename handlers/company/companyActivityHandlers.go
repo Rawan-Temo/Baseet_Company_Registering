@@ -61,6 +61,13 @@ func CreateCompanyActivity(c *fiber.Ctx) error {
 		})
 	}
 
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	companyActivity := company_models.CompanyActivity{
 		CompanyID:         req.CompanyId,
 		TradingActivityID: req.TradingActivityID,
@@ -150,7 +157,13 @@ func UpdateCompanyActivity(c *fiber.Ctx) error {
 			"error": "Invalid JSON",
 		})
 	}
-
+    if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	if req.Image == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No valid fields"})
 	}

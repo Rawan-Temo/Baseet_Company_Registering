@@ -59,6 +59,13 @@ func CreateCompanyType(c *fiber.Ctx) error {
 		})
 	}
 
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	companyType := general_models.CompanyType{
 		Name: req.Name,
 	}
@@ -126,6 +133,13 @@ func UpdateCompanyType(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid JSON",
+		})
+	}
+	if err:= utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
 		})
 	}
 
