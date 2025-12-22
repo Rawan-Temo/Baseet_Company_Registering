@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -68,79 +67,134 @@ func GetAllLicenses(c *fiber.Ctx) error {
 }
 
 func CreateLicense(c *fiber.Ctx) error {
-	db := database.DB
-	var req dtos.CreateLicenseRequest
+    db := database.DB
+    var req dtos.CreateLicenseRequest
+    
+    // First, check if this is multipart form data
+    _, err := c.MultipartForm()
+    if err == nil {
+        // Handle multipart form data
+        companyIdStr := c.FormValue("company_id")
+        if companyIdStr != "" {
+            if companyId, parseErr := strconv.ParseUint(companyIdStr, 10, 32); parseErr == nil {
+                req.CompanyId = uint(companyId)
+            }
+        }
+        
+        if startDateStr := c.FormValue("start_date"); startDateStr != "" {
+            if startDate, parseErr := time.Parse("2006-01-02", startDateStr); parseErr == nil {
+                req.StartDate = startDate
+            }
+        }
+        
+        if expirationDateStr := c.FormValue("expiration_date"); expirationDateStr != "" {
+            if expirationDate, parseErr := time.Parse("2006-01-02", expirationDateStr); parseErr == nil {
+                req.ExpirationDate = expirationDate
+            }
+        }
+        
+        // Handle image file upload
+        _, err := c.FormFile("image")
+        if err == nil {
+            imageConfig := utils.DefaultImageConfig()
+            imageConfig.UploadDir = "./uploads/licenses/"
+            
+            // Create directory if it doesn't exist
+            if _, err := os.Stat(imageConfig.UploadDir); os.IsNotExist(err) {
+                os.MkdirAll(imageConfig.UploadDir, 0755)
+            }
 
-	// Try to parse JSON first
-	if err := c.BodyParser(&req); err != nil {
-		fmt.Println(req)
-		// If JSON parsing fails, try multipart form (for file uploads)
-		if companyIdStr := c.FormValue("company_id"); companyIdStr != "" {
-			if companyId, parseErr := strconv.ParseUint(companyIdStr, 10, 32); parseErr == nil {
-				req.CompanyId = uint(companyId)
-			}
-		}
-		startDate , _ := time.Parse("2006-01-02", c.FormValue("start_date"))
-		req.StartDate = startDate
+            if uploadedPath, uploadErr := utils.UploadImage(c, "image", imageConfig); uploadErr != nil {
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                    "status":  "fail",
+                    "message": "Image upload failed",
+                    "error":   uploadErr.Error(),
+                })
+            } else {
+                // Initialize Image pointer if nil
+                if req.Image == nil {
+                    imageStr := uploadedPath
+                    req.Image = &imageStr
+                } else {
+                    *req.Image = uploadedPath
+                }
+            }
+        } else if imageStr := c.FormValue("image"); imageStr != "" {
+            // Use direct image URL if provided
+            req.Image = &imageStr
+        }
+        
+        // Validate required fields
+        if req.CompanyId == 0 {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "status":  "fail",
+                "message": "Company ID is required",
+            })
+        }
+        
+        if req.StartDate.Equal((time.Time{})) {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "status":  "fail",
+                "message": "Start date is required",
+            })
+        }
 
-		expirationDate , _ :=time.Parse("2006-01-02", c.FormValue("expiration_date"))
-		req.ExpirationDate = expirationDate
-
-		*req.Image = c.FormValue("image")
-
-		// Handle image upload if file is provided
-		if _, err := c.FormFile("image_file"); err == nil {
-			imageConfig := utils.DefaultImageConfig()
-			imageConfig.UploadDir = "./uploads/licenses/"
-			if uploadedPath, uploadErr := utils.UploadImage(c, "image_file", imageConfig); uploadErr != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"status":  "fail",
-					"message": "Image upload failed",
-					"error":   uploadErr.Error(),
-				})
-			} else {
-				*req.Image = uploadedPath
-			}
-		}
-	}
-
-	license := auth_models.License{
-		CompanyId:      req.CompanyId,
-		StartDate:      req.StartDate,
-		ExpirationDate: req.ExpirationDate,
-		Image:          req.Image,
-	}
-
-	if err := db.Create(&license).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"status":  "fail",
-				"message": err.Error(),
-			})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "could not create license",
-			"error":   err.Error(),
-		})
-	}
-
-	response := dtos.LicenseResponse{
-		ID:             license.ID,
-		CompanyId:      license.CompanyId,
-		StartDate:      license.StartDate,
-		ExpirationDate: license.ExpirationDate,
-		Image:          license.Image,
-		CreatedAt:      license.CreatedAt,
-		UpdatedAt:      license.UpdatedAt,
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success",
-		"data":   response,
-	})
+        if req.ExpirationDate.Equal((time.Time{})) {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "status":  "fail",
+                "message": "Expiration date is required",
+            })
+        }
+        
+    } else {
+        // Try to parse as JSON
+        if err := c.BodyParser(&req); err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "status":  "fail",
+                "message": "Invalid request format",
+                "error":   "Expected JSON or multipart form data",
+            })
+        }
+    }
+    
+    // Now create the license
+    license := auth_models.License{
+        CompanyId:      req.CompanyId,
+        StartDate:      req.StartDate,
+        ExpirationDate: req.ExpirationDate,
+        Image:          req.Image,
+    }
+    
+    if err := db.Create(&license).Error; err != nil {
+        if strings.Contains(err.Error(), "duplicate key value") {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "status":  "fail",
+                "message": "License already exists for this company",
+                "error":   err.Error(),
+            })
+        }
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "status":  "fail",
+            "message": "Could not create license",
+            "error":   err.Error(),
+        })
+    }
+    
+    response := dtos.LicenseResponse{
+        ID:             license.ID,
+        CompanyId:      license.CompanyId,
+        StartDate:      license.StartDate,
+        ExpirationDate: license.ExpirationDate,
+        Image:          license.Image,
+        CreatedAt:      license.CreatedAt,
+        UpdatedAt:      license.UpdatedAt,
+    }
+    
+    return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+        "status": "success",
+        "data":   response,
+    })
 }
-
 
 
 func GetLicenseByID(c *fiber.Ctx) error {

@@ -31,7 +31,9 @@ func DefaultImageConfig() ImageUploadConfig {
 
 // UploadImage handles single image file upload
 func UploadImage(c *fiber.Ctx, fieldName string, config ImageUploadConfig) (string, error) {
+	
 	file, err := c.FormFile(fieldName)
+	fmt.Print(file)
 	if err != nil {
 		return "", fmt.Errorf("failed to get file: %v", err)
 	}
