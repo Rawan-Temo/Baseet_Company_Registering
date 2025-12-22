@@ -3,6 +3,7 @@ package company_models
 import (
 	"errors"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	"gorm.io/gorm"
 )
 
@@ -11,7 +12,7 @@ import (
 // People represents an individual associated with a company, such as a partner,
 // authorized representative, board member, or stakeholder.
 type People struct {
-    gorm.Model
+    models.NewGormModel
     CompanyID uint   `gorm:"index;not null" json:"company_id"`
     FullName  string `gorm:"type:varchar(255);not null" json:"full_name"`
     Email     string `gorm:"type:varchar(255)" json:"email"`

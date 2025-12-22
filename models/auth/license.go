@@ -4,12 +4,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"gorm.io/gorm"
 )
 
 type License struct {
-	gorm.Model
+	models.NewGormModel
 
 	CompanyId uint `gorm:"not null;index" json:"company_id"`
 	// الشركة المالكة للترخيص

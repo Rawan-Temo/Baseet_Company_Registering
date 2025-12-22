@@ -1,10 +1,8 @@
 package general_models
 
-import (
-	"gorm.io/gorm"
-)
+import "github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 
 type Office struct {
-	gorm.Model
+	models.NewGormModel
 	Name string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(100);not null" json:"name"`
 }

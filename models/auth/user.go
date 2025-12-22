@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ const (
 
 // User model
 type User struct {
-	gorm.Model
+	models.NewGormModel
 	UserName  string     `gorm:"type:varchar(50);uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;column:username;type:varchar(100);not null" json:"username"`
 	FullName  string     `gorm:"type:varchar(150);uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;not null" json:"full_name"`
 	Password  string     `gorm:"type:varchar(100);not null" json:"-"`

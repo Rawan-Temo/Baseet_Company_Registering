@@ -3,6 +3,7 @@ package company_models
 import (
 	"errors"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	"gorm.io/gorm"
 )
 
@@ -10,7 +11,7 @@ import (
 
 
 type CompanyActivity struct {
-	gorm.Model
+	models.NewGormModel
 
 
 	CompanyID uint `gorm:"primaryKey" json:"company_id"`

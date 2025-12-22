@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
 	"gorm.io/gorm"
 )
@@ -14,7 +15,7 @@ import (
 
 
 type Company struct {
-	gorm.Model
+	models.NewGormModel
 
 	Name            string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(100);not null" json:"name" validate:"required"`
 	// الاسم الرسمي للشركة

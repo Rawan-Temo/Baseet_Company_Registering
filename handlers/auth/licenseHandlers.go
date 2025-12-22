@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -72,6 +73,7 @@ func CreateLicense(c *fiber.Ctx) error {
 
 	// Try to parse JSON first
 	if err := c.BodyParser(&req); err != nil {
+		fmt.Println(req)
 		// If JSON parsing fails, try multipart form (for file uploads)
 		if companyIdStr := c.FormValue("company_id"); companyIdStr != "" {
 			if companyId, parseErr := strconv.ParseUint(companyIdStr, 10, 32); parseErr == nil {
