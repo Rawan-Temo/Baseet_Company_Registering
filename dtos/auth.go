@@ -18,7 +18,7 @@ type UserTokenClaim struct {
 	Iat  int64  `json:"iat"`
 }
 type UpdateUserRequest struct {
-	FullName  *string `json:"full_name" validate:"required,min=3,max=150"`
+	FullName  *string `json:"full_name" validate:"omitempty,min=3,max=150"`
 	Email  *string `json:"email" validate:"omitempty,email"`
 	Password  *string `json:"password" validate:"omitempty,min=6"`
 	Active *bool   `json:"active"`
@@ -32,7 +32,6 @@ type UserResponse struct {
 	Role      string     `json:"role"`
 	CompanyId *uint      `json:"company_id"`
 	Active    bool       `json:"active"`
-	ExpiresAt *time.Time `json:"expires_at"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }

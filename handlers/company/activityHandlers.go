@@ -24,7 +24,8 @@ func AllTradingActivity(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"name", "ID", "created_at", "updated_at", "deleted_at"}
+
+	allowedCols := []string{"name", "id", "created_at", "updated_at", "deleted_at"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
 	if err := queryBuilder.Apply().Find(&tradingActivities).Error; err != nil {

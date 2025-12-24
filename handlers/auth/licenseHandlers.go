@@ -27,7 +27,7 @@ func GetAllLicenses(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"company_id", "ID", "created_at", "updated_at", "deleted_at", "start_date", "expiration_date"}
+	allowedCols := []string{"company_id","image", "id", "created_at", "updated_at", "deleted_at", "start_date", "expiration_date"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
 	if err := queryBuilder.Apply().Find(&licenses).Error; err != nil {

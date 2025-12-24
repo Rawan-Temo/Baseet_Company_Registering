@@ -3,6 +3,7 @@ package company_models
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
@@ -70,7 +71,8 @@ type Company struct {
 	People          []People `gorm:"foreignKey:CompanyID" json:"people"`
 	// الشركاء، الممثلون، أعضاء مجلس الإدارة
 
-	IsLicensed      bool   `gorm:"default:false" json:"is_licensed"`
+	//30 days default
+	License      time.Time   `gorm:"default:CURRENT_TIMESTAMP" json:"license"`
 	// هل النشاط مرخص
 
 	Duration        string `gorm:"type:varchar(100)" json:"duration"`

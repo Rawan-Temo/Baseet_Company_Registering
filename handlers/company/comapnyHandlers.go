@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
@@ -18,7 +20,7 @@ func AllCompanies(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"id", "type_id" , "company_id", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
+	allowedCols := []string{"id", "type_id" , "company_id","licesnse", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
 	apiFeatures := utils.NewQueryBuilder(db, queries, allowedCols)
 
 	apiFeatures.Filter().Sort().LimitFields().Paginate()
@@ -60,6 +62,8 @@ func CreateCompany(c *fiber.Ctx) error {
 			"error":   err,
 		})
 	}
+	defaultLicense := time.Now().AddDate(0, 1, 0) // default to 30 days from now
+
 
 	company := company_models.Company{
 		Name:            req.Name,
@@ -71,7 +75,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		PhoneNumber:     req.PhoneNumber,
 		CompanyTypeID:   req.CompanyTypeID,
 		OfficeId:        req.OfficeId,
-		IsLicensed:      req.IsLicensed,
+		License: defaultLicense,
 		People:req.People,
 		CEOName:req.CEOName ,
 		CEOPhone: req.CEOPhone,
@@ -212,7 +216,7 @@ func GetCompanyResponse(company company_models.Company) dtos.CompanyResponse {
 		CompanyType:   company.CompanyType,
 		OfficeId:        company.OfficeId,
 		Office:        company.Office,
-		IsLicensed:      company.IsLicensed,
+		License:      company.License,
 		CEOName:company.CEOName ,
 		CEOPhone: company.CEOPhone,
 		CEOEmail:company.CEOEmail ,

@@ -6,7 +6,6 @@ import (
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	auth_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/auth"
-	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -96,7 +95,6 @@ func CreateUser(c *fiber.Ctx) error {
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
 		Active:    user.Active,
-		ExpiresAt: user.ExpiresAt,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -128,7 +126,6 @@ func SingleUser(c *fiber.Ctx) error {
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
 		Active:    user.Active,
-		ExpiresAt: user.ExpiresAt,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -168,20 +165,7 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	if req.Active != nil {
-		user.Active = *req.Active
-	}
-	if req.Email != nil {
-		user.Email = *req.Email
-	}
-
-	if req.Password != nil {
-		user.Password = *req.Password	
-	}
-	if req.FullName != nil {
-		user.FullName = *req.FullName	
-	}
-
+	utils.UpdateStruct(&user, &req)
 
 	if err := db.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -193,12 +177,12 @@ func UpdateUser(c *fiber.Ctx) error {
 
 	response := dtos.UserResponse{
 		ID:        user.ID,
+		FullName:  user.FullName,
 		UserName:  user.UserName,
 		Email:     user.Email,
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
 		Active:    user.Active,
-		ExpiresAt: user.ExpiresAt,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -253,7 +237,8 @@ func Login(c *fiber.Ctx) error {
 	}
 	// Find user
 	var user auth_models.User
-	if err := db.Where("username = ? And deleted_at IS NULL", req.UserName).First(&user).Error; err != nil {
+
+	if err := db.Preload("Company").Where("username = ? And deleted_at IS NULL", req.UserName).First(&user).Error; err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
 	}
 
@@ -263,18 +248,10 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Handle expiration (only for non-admin users)
-	if user.Role != auth_models.RoleAdmin && time.Now().After(*user.ExpiresAt) {
-		// Try to fetch and deactivate company
-		var company company_models.Company
-		if err := db.First(&company, user.CompanyId).Error; err == nil {
-			company.IsLicensed = false
-			_ = db.Save(&company).Error
-		}
-
+	if user.Role != auth_models.RoleAdmin && time.Now().After(user.Company.License) {
 		// Deactivate user
 		user.Active = false
 		_ = db.Save(&user).Error
-
 		return fiber.NewError(fiber.StatusUnauthorized, "User account expired, contact admin")
 	}
 
@@ -298,7 +275,6 @@ func Login(c *fiber.Ctx) error {
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
 		Active:    user.Active,
-		ExpiresAt: user.ExpiresAt,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -330,7 +306,6 @@ func GetUserFromToken(c *fiber.Ctx) error {
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
 		Active:    user.Active,
-		ExpiresAt: user.ExpiresAt,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 

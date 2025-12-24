@@ -26,7 +26,6 @@ type CreateCompanyRequest struct {
 	CEOAddress string `json:"ceo_address" validate:"max=200"`
 	CompanyTypeID   uint   `json:"type_id" validate:"required"`
 	OfficeId        uint   `json:"office_id" validate:"required"`
-	IsLicensed      bool   `json:"is_licensed"`
 	People 		[]company_models.People `json:"people"`
 	Duration        string `json:"duration" validate:"max=100"`
 }
@@ -44,7 +43,6 @@ type UpdateCompanyRequest struct {
 	Description     *string `json:"description" validate:"omitempty,max=500"`
 	Email           *string `json:"email" validate:"omitempty,email"`
 	PhoneNumber     *string `json:"phone_number" validate:"omitempty,max=15"`
-	IsLicensed      *bool   `json:"is_licensed"`
 	CEOName *string `json:"ceo_name" validate:"max=100"`
 	CEOPhone *string `json:"ceo_phone" validate:"max=20"`
 	CEOEmail *string `json:"ceo_email" validate:"omitempty,email"`
@@ -69,7 +67,7 @@ type CompanyResponse struct {
 	CompanyType      general_models.CompanyType `json:"company_type"`
 	OfficeId        uint      `json:"office_id"`
 	Office      general_models.Office `json:"office"`
-	IsLicensed      bool      `json:"is_licensed"`
+	License      time.Time      `json:"license"`
 	CEOName         string    `json:"ceo_name"`
 	CEOPhone        string    `json:"ceo_phone"`
 	CEOEmail        string    `json:"ceo_email"`
