@@ -29,6 +29,8 @@
 
 # Fiber / GORM logs
 *.log
+uploads/
+tmp/
 
 # Node/React (if your project includes front-end)
 node_modules/

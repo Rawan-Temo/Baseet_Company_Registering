@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -10,6 +12,7 @@ import (
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
 	auth_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/auth"
+	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -69,10 +72,10 @@ func GetAllLicenses(c *fiber.Ctx) error {
 func CreateLicense(c *fiber.Ctx) error {
     db := database.DB
     var req dtos.CreateLicenseRequest
-    
     // First, check if this is multipart form data
     _, err := c.MultipartForm()
     if err == nil {
+    
         // Handle multipart form data
         companyIdStr := c.FormValue("company_id")
         if companyIdStr != "" {
@@ -82,13 +85,13 @@ func CreateLicense(c *fiber.Ctx) error {
         }
         
         if startDateStr := c.FormValue("start_date"); startDateStr != "" {
-            if startDate, parseErr := time.Parse("2006-01-02", startDateStr); parseErr == nil {
+            if startDate, parseErr := utils.ParseDate(startDateStr); parseErr == nil {
                 req.StartDate = startDate
             }
         }
         
         if expirationDateStr := c.FormValue("expiration_date"); expirationDateStr != "" {
-            if expirationDate, parseErr := time.Parse("2006-01-02", expirationDateStr); parseErr == nil {
+            if expirationDate, parseErr := utils.ParseDate(expirationDateStr); parseErr == nil {
                 req.ExpirationDate = expirationDate
             }
         }
@@ -164,7 +167,7 @@ func CreateLicense(c *fiber.Ctx) error {
         ExpirationDate: req.ExpirationDate,
         Image:          req.Image,
     }
-    
+
     if err := db.Create(&license).Error; err != nil {
         if strings.Contains(err.Error(), "duplicate key value") {
             return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -178,11 +181,34 @@ func CreateLicense(c *fiber.Ctx) error {
             "message": "Could not create license",
             "error":   err.Error(),
         })
+
+	}
+	var company company_models.Company
+    if err := db.First(&company, license.CompanyId).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Could not fetch created license",
+			"error":   err.Error(),
+		})
+	}
+
+	if license.ExpirationDate.After(company.License) {
+
+        company.License = license.ExpirationDate
+          if err := db.Save(&company).Error; err != nil {
+           // Log error but don't fail the entire operation
+           log.Printf("Failed to update company license date: %v", err)
+        }
     }
-    
+	
+
+
+
+
     response := dtos.LicenseResponse{
         ID:             license.ID,
         CompanyId:      license.CompanyId,
+		Company: company,
         StartDate:      license.StartDate,
         ExpirationDate: license.ExpirationDate,
         Image:          license.Image,
@@ -227,147 +253,225 @@ func GetLicenseByID(c *fiber.Ctx) error {
 		"data":   response,
 	})
 }
-
+//TODO fix this shit 
 func UpdateLicense(c *fiber.Ctx) error {
-	id := c.Params("id")
-	db := database.DB
+    id := c.Params("id")
+    db := database.DB
 
-	// First, get the current license to check for existing image
-	var currentLicense auth_models.License
-	if err := db.First(&currentLicense, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "License not found"})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch license"})
-	}
+    // Get current license
+    var license auth_models.License
+    if err := db.First(&license, id).Error; err != nil {
+        return handleNotFoundOrError(err)
+    }
 
-	var req dtos.UpdateLicenseRequest
+    var req dtos.UpdateLicenseRequest
+    contentType := c.Get("Content-Type")
 
-	// Try to parse JSON first
-	if err := c.BodyParser(&req); err != nil {
-		// If JSON parsing fails, try multipart form (for file uploads)
-		startDate, _ := time.Parse("2006-01-02", c.FormValue("start_date"))
-		if startDate != (time.Time{}) {
-			req.StartDate = &startDate
-		}
-		expirationDate, _ := time.Parse("2006-01-02", c.FormValue("expiration_date"))
-		if expirationDate != (time.Time{}) {
-			req.ExpirationDate = &expirationDate
-		}
-		if image := c.FormValue("image"); image != "" {
-			req.Image = &image
-		}
+    // Check content type
+    if strings.Contains(contentType, "multipart/form-data") {
+         _, err := c.MultipartForm()
+        if err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Failed to parse form data",
+                "details": err.Error(),
+            })
+        }
 
-		// Handle image upload if file is provided
-		if _, err := c.FormFile("image_file"); err == nil {
-			imageConfig := utils.DefaultImageConfig()
-			imageConfig.UploadDir = "./uploads/licenses/"
-			if uploadedPath, uploadErr := utils.UploadImage(c, "image_file", imageConfig); uploadErr != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"status":  "fail",
-					"message": "Image upload failed",
-					"error":   uploadErr.Error(),
-				})
-			} else {
-				req.Image = &uploadedPath
-				// Delete old image if it exists
-				if *currentLicense.Image != "" && *req.Image != *currentLicense.Image {
-					os.Remove(*currentLicense.Image)
-				}
-			}
-		}
-	}
+        // Handle dates
+        if startDateStr := c.FormValue("start_date"); startDateStr != "" {
+			fmt.Println(startDateStr)
+            startDate, err := utils.ParseDate(startDateStr)
+            if err == nil {
+                req.StartDate = &startDate
+            }
+        }
 
-	sanitized := map[string]interface{}{}
+        if expirationDateStr := c.FormValue("expiration_date"); expirationDateStr != "" {
+            expirationDate, err := utils.ParseDate(expirationDateStr)
+            if err == nil {
+                req.ExpirationDate = &expirationDate
+            }
+        }
 
-	if req.StartDate != nil {
-		sanitized["start_date"] = req.StartDate
-	}
-	if req.ExpirationDate != nil {
-		sanitized["expiration_date"] = req.ExpirationDate
-	}
-	if req.Image != nil {
-		sanitized["image"] = req.Image
-		// Delete old image if a new image is being set and it's different
-		if *currentLicense.Image != "" && *req.Image != *currentLicense.Image {
-			os.Remove(*currentLicense.Image)
-		}
-	}
+        // Handle image - first check for file upload
+        if _, err := c.FormFile("image"); err == nil {
+            imageConfig := utils.DefaultImageConfig()
+            imageConfig.UploadDir = "./uploads/licenses/"
+            
+            if uploadedPath, uploadErr := utils.UploadImage(c, "image", imageConfig); uploadErr == nil {
+                req.Image = &uploadedPath
+            }
+        } else if imageStr := c.FormValue("image"); imageStr != "" {
+            // Use direct URL if no file uploaded
+            req.Image = &imageStr
+        }
+    } else {
+        // Handle JSON
+        if err := c.BodyParser(&req); err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Invalid JSON",
+            })
+        }
+    }
 
-	if len(sanitized) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No valid fields"})
-	}
+    // Apply updates
+    updates := map[string]interface{}{}
+    oldImagePath := ""
+	
+    if req.StartDate != nil {
+        updates["start_date"] = *req.StartDate
+    }
+    if req.ExpirationDate != nil {
+        updates["expiration_date"] = *req.ExpirationDate
+    }
+    if req.Image != nil {
+        // Save old image for cleanup
+        if license.Image != nil {
+            oldImagePath = *license.Image
+        }
+        updates["image"] = *req.Image
+    }
 
-	var license auth_models.License
-	res := db.Model(&license).Where("id = ?", id).Updates(sanitized)
-	if res.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Update failed"})
-	}
-	if res.RowsAffected == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "License not found"})
-	}
-	if err := db.First(&license, id).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Fetch after update failed"})
-	}
+    if len(updates) == 0 {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "No fields to update",
+        })
+    }
 
-	response := dtos.LicenseResponse{
-		ID:             license.ID,
-		CompanyId:      license.CompanyId,
-		StartDate:      license.StartDate,
-		ExpirationDate: license.ExpirationDate,
-		Image:          license.Image,
-		CreatedAt:      license.CreatedAt,
-		UpdatedAt:      license.UpdatedAt,
-	}
+    // Update in database
+    if err := db.Model(&license).Updates(updates).Error; err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Update failed",
+        })
+    }
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "License updated successfully",
-		"data":    response,
-	})
+    // Clean up old image
+    if oldImagePath != "" && !isURL(oldImagePath) {
+        utils.DeleteImage(oldImagePath, "./uploads/licenses/")
+    }
+
+    // Return updated license
+    if err := db.Preload("Company").First(&license, id).Error; err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to fetch updated license",
+        })
+    }
+
+
+	if license.ExpirationDate.After(license.Company.License) {
+         license.Company.License = license.ExpirationDate
+         if err := db.Save(&license.Company).Error; err != nil {
+          // Log error but don't fail the entire operation
+            log.Printf("Failed to update company license date: %v", err)
+         }
+   }
+
+    response := dtos.LicenseResponse{
+        ID:             license.ID,
+        CompanyId:      license.CompanyId,
+		Company: license.Company,
+        StartDate:      license.StartDate,
+        ExpirationDate: license.ExpirationDate,
+        Image:          license.Image,
+        CreatedAt:      license.CreatedAt,
+        UpdatedAt:      license.UpdatedAt,
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "License updated successfully",
+        "data":    response,
+    })
 }
+
+
 
 func DeleteLicense(c *fiber.Ctx) error {
-	id := c.Params("id")
-	db := database.DB
+    id := c.Params("id")
+    db := database.DB
 
-	// First, get the license to check for image
-	var license auth_models.License
-	if err := db.First(&license, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "License not found",
-			})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch license",
-		})
-	}
+    // Get license first (outside transaction for file cleanup later)
+    var license auth_models.License
+    if err := db.Preload("Company").First(&license, id).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+                "error": "License not found",
+            })
+        }
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to fetch license",
+        })
+    }
 
-	// Delete the associated image file if it exists
-	if *license.Image != "" {
-		os.Remove(*license.Image)
-	}
+    // Store image path before deletion
+    var imagePath string
+    if license.Image != nil {
+        imagePath = *license.Image
+    }
+    // Use a single SQL query to handle everything
+    result := db.Transaction(func(tx *gorm.DB) error {
+        // 1. Delete the license
+        if err := tx.Delete(&license).Error; err != nil {
+            return err
+        }
 
-	// Use RowsAffected to check if the record exists
-	res := db.Delete(&auth_models.License{}, id)
-	if res.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to delete License",
-		})
-	}
+        // 2. Check if this was the current license and update company if needed
+        // We need to check this AFTER deletion
+        licenseDate := license.ExpirationDate.Truncate(24 * time.Hour)
+        companyLicenseDate := license.Company.License.Truncate(24 * time.Hour)
+        
+        if licenseDate.Equal(companyLicenseDate) {
+            // Get the max expiration date from remaining licenses
+            var maxDate time.Time
+            err := tx.Model(&auth_models.License{}).
+                Where("company_id = ?", license.CompanyId).
+                Select("COALESCE(MAX(expiration_date), '0001-01-01')").
+                Scan(&maxDate).Error
+            
+            if err != nil {
+                return err
+            }
 
-	if res.RowsAffected == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "License not found",
-		})
-	}
+            // Update company license
+            updateValue := maxDate
+            if maxDate.IsZero() || maxDate.Year() == 1 { // Check for zero time
+                updateValue = time.Time{}
+            }
+            
+            return tx.Model(&license.Company).
+                Update("license", updateValue).Error
+        }
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "License deleted successfully",
-	})
+        return nil
+    })
+
+    if result != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to delete license",
+            "details": result.Error(),
+        })
+    }
+
+    // Clean up image file after successful deletion
+    if imagePath != "" && !strings.HasPrefix(imagePath, "http://") && !strings.HasPrefix(imagePath, "https://") {
+        if err := utils.DeleteImage(imagePath, "./uploads/licenses/"); err != nil {
+            log.Printf("Warning: Failed to delete license image: %v", err)
+        }
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "License deleted successfully",
+    })
 }
 
 
+//========================== Helpers ==========================
+func isURL(path string) bool {
+    return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
+}
 
-
-
+func handleNotFoundOrError(err error) error {
+    if errors.Is(err, gorm.ErrRecordNotFound) {
+        return fiber.NewError(fiber.StatusNotFound, "License not found")
+    }
+    return fiber.NewError(fiber.StatusInternalServerError, "Database error")
+}

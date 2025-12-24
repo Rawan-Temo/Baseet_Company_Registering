@@ -33,7 +33,6 @@ func DefaultImageConfig() ImageUploadConfig {
 func UploadImage(c *fiber.Ctx, fieldName string, config ImageUploadConfig) (string, error) {
 	
 	file, err := c.FormFile(fieldName)
-	fmt.Print(file)
 	if err != nil {
 		return "", fmt.Errorf("failed to get file: %v", err)
 	}
@@ -65,7 +64,6 @@ func UploadImage(c *fiber.Ctx, fieldName string, config ImageUploadConfig) (stri
 	filePath := filepath.Join(config.UploadDir, filename)
 
 	// Save file
-	fmt.Print(filePath)
 
 	if err := c.SaveFile(file, filePath); err != nil {
 		return "", fmt.Errorf("failed to save file: %v", err)

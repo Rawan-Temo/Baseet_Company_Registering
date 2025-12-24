@@ -1,6 +1,10 @@
 package dtos
 
-import "time"
+import (
+	"time"
+
+	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
+)
 
 // User DTOs
 type CreateUserRequest struct {
@@ -53,6 +57,7 @@ type UpdateLicenseRequest struct {
 type LicenseResponse struct {
 	ID             uint      `json:"id"`
 	CompanyId      uint      `json:"company_id"`
+	Company        company_models.Company `json:"company"`
 	StartDate      time.Time `json:"start_date"`
 	ExpirationDate time.Time `json:"expiration_date"`
 	Image          *string    `json:"image"`
