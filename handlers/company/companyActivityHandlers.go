@@ -51,10 +51,11 @@ func GetAllCompanyActivities(c *fiber.Ctx) error {
 
 func CreateCompanyActivity(c *fiber.Ctx) error {
 	db := database.DB
+	
 	var company company_models.Company
 	var req dtos.CreateCompanyActivityRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
 			"error":   err.Error(),

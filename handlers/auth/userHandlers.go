@@ -57,7 +57,7 @@ func CreateUser(c *fiber.Ctx) error {
 	var req dtos.CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
 			"error":   err.Error(),

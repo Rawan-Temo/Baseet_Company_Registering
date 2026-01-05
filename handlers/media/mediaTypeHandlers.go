@@ -53,7 +53,7 @@ func CreateMediaType(c *fiber.Ctx) error {
 	db := database.DB
 	var req dtos.CreateMediaTypeRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "could not parse json",
 			"error":   err.Error(),

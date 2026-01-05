@@ -11,9 +11,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
+
 // TODOO : company activities , trading activities , people routes protect them with authentication middleware
-// TODOO : handlers for licenses  companyActivities middle table check the copilot media handlers maybe he screwed up something 
-// TODOO : 
+// TODOO : handlers for licenses  companyActivities middle table check media handlers maybe u screwed up something
+// TODOO :
 func main() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
