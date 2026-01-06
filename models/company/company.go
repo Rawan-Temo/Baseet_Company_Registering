@@ -13,8 +13,29 @@ import (
 // TODO 	add vaildation tags and dont casecade create for related models
 // Company represents a registered company with its details and relationships.
 
+type CompanyCategory string
+const (
+	// فرع شركة
+	CompanyCategoryBranch CompanyCategory = "branch"
 
+	// شركة فردية
+	CompanyCategorySoleProprietorship CompanyCategory = "sole_proprietorship"
 
+	// شركة مساهمة
+	CompanyCategoryJointStock CompanyCategory = "joint_stock"
+
+	// شركة تضامن
+	CompanyCategoryGeneralPartnership CompanyCategory = "general_partnership"
+
+	// مكتب تمثيل
+	CompanyCategoryRepresentationOffice CompanyCategory = "representation_office"
+
+	// شركة ذات مسؤولية محدودة
+	CompanyCategoryLimitedLiability CompanyCategory = "limited_liability_company"
+
+	// شركة توصية بسيطة
+	CompanyCategoryLimitedPartnership CompanyCategory = "limited_partnership"
+)
 type Company struct {
 	models.NewGormModel
 
@@ -56,7 +77,7 @@ type Company struct {
 	CompanyTypeID   uint `gorm:"column:type_id;not null;index" json:"type_id" validate:"required"`
 	// نوع الشركة (FK فقط – لا إنشاء تلقائي)
 
-	CompanyType     general_models.CompanyType `gorm:"foreignKey:CompanyTypeID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"type,omitempty"`
+	CompanyCategory     CompanyCategory `gorm:"type:varchar(100);not null" json:"company_category" validate:"required"`
 	// نوع الشركة (للقراءة فقط)
 
 	OfficeId        uint `gorm:"not null;index" json:"office_id" validate:"required"`
@@ -108,6 +129,9 @@ func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 	if c.Name == "" {
 		return errors.New("company name is required")
 	}
+    if  !IsValidCompanyCategory(c.CompanyCategory) { 
+		return errors.New("invalid company category")
+	}
 
 	if c.LocalAddress == "" {
 		return errors.New("company local address is required")
@@ -124,18 +148,13 @@ func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 	// ---------- FK existence checks (NO cascade) ----------
 
 	// Check company type exists
-	if err := tx.First(&general_models.CompanyType{}, c.CompanyTypeID).Error; err != nil {
-		return errors.New("invalid company type")
-	}
+	
 
 	// Check office exists
 	if err := tx.First(&general_models.Office{}, c.OfficeId).Error; err != nil {
 		return errors.New("invalid office")
 	}
 
-    if c.CompanyType.ID != 0 {
-    	return errors.New("nested company_type creation is not allowed")
-    }
     if c.Office.ID != 0 {
     	return errors.New("nested office creation is not allowed")
     }
@@ -148,4 +167,19 @@ func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 	}
 
 	return nil
+}
+func IsValidCompanyCategory(c CompanyCategory) bool {
+	switch c {
+	case
+		CompanyCategoryBranch,
+		CompanyCategorySoleProprietorship,
+		CompanyCategoryJointStock,
+		CompanyCategoryGeneralPartnership,
+		CompanyCategoryRepresentationOffice,
+		CompanyCategoryLimitedLiability,
+		CompanyCategoryLimitedPartnership:
+		return true
+	default:
+		return false
+	}
 }

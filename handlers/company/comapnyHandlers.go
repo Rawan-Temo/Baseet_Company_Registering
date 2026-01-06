@@ -20,12 +20,12 @@ func AllCompanies(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"id", "type_id" , "company_id","licesnse", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
+	allowedCols := []string{"id", "company_category","licesnse", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
 	apiFeatures := utils.NewQueryBuilder(db, queries, allowedCols)
 
 	apiFeatures.Filter().Sort().LimitFields().Paginate()
 
-	if err := apiFeatures.Apply().Preload("CompanyType").Preload("Office").Find(&companies).Error; err != nil {
+	if err := apiFeatures.Apply().Preload("Office").Find(&companies).Error; err != nil {
 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to fetch companies",
@@ -73,7 +73,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		Description:     req.Description,
 		Email:           req.Email,
 		PhoneNumber:     req.PhoneNumber,
-		CompanyTypeID:   req.CompanyTypeID,
+        CompanyCategory:   company_models.CompanyCategory(req.CompanyCategory),
 		OfficeId:        req.OfficeId,
 		License: defaultLicense,
 		People:req.People,
@@ -106,7 +106,7 @@ func SingleCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var company company_models.Company
-	if err := db.Preload("CompanyType").Preload("Office").Preload("People").First(&company, id).Error; err != nil {
+	if err := db.Preload("Office").Preload("People").First(&company, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Company not found",
@@ -213,7 +213,7 @@ func GetCompanyResponse(company company_models.Company) dtos.CompanyResponse {
 		Email:           company.Email,
 		PhoneNumber:     company.PhoneNumber,
 		CompanyTypeID:   company.CompanyTypeID,
-		CompanyType:   company.CompanyType,
+		CompanyCategory:   string(company.CompanyCategory),
 		OfficeId:        company.OfficeId,
 		Office:        company.Office,
 		License:      company.License,

@@ -81,12 +81,11 @@ func CreateCompanyActivity(c *fiber.Ctx) error {
 		})
 	}
 
-	if company.CompanyType.Name == "Free"{
-		c.Status(400).JSON(fiber.Map{
+    if company.CompanyCategory == company_models.CompanyCategoryRepresentationOffice {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
-			"message": "Free type company cannot leggaly have any activities in syria",
+			"message": "representation offices cannot legally have trading activities",
 		})
-		return nil
 	}
 
 	if err := db.Create(&companyActivity).Error; err != nil {
