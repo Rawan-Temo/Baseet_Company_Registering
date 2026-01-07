@@ -20,7 +20,7 @@ func AllCompanies(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"id", "company_category","licesnse", "type" , "office", "people", "trade_names", "authority_name", "authority_number", "name", "address" , "ceo_name" , "ceo_email" , "ceo_phone" , "ceo_address", "phone", "email", "created_at", "updated_at"}
+	allowedCols := []string{"id", "company_category", "licesnse", "type", "office", "people", "trade_names", "authority_name", "authority_number", "name", "address", "ceo_name", "ceo_email", "ceo_phone", "ceo_address", "phone", "email", "created_at", "updated_at"}
 	apiFeatures := utils.NewQueryBuilder(db, queries, allowedCols)
 
 	apiFeatures.Filter().Sort().LimitFields().Paginate()
@@ -55,7 +55,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -63,7 +63,6 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 	defaultLicense := time.Now().AddDate(0, 1, 0) // default to 30 days from now
-
 
 	company := company_models.Company{
 		Name:            req.Name,
@@ -73,19 +72,19 @@ func CreateCompany(c *fiber.Ctx) error {
 		Description:     req.Description,
 		Email:           req.Email,
 		PhoneNumber:     req.PhoneNumber,
-        CompanyCategory:   company_models.CompanyCategory(req.CompanyCategory),
+		CompanyCategory: company_models.CompanyCategory(req.CompanyCategory),
 		OfficeId:        req.OfficeId,
-		License: defaultLicense,
-		People:req.People,
-		CEOName:req.CEOName ,
-		CEOPhone: req.CEOPhone,
-		CEOEmail:req.CEOEmail ,
-		CEOAddress: req.CEOAddress,
+		License:         defaultLicense,
+		People:          req.People,
+		CEOName:         req.CEOName,
+		CEOPhone:        req.CEOPhone,
+		CEOEmail:        req.CEOEmail,
+		CEOAddress:      req.CEOAddress,
 		Duration:        req.Duration,
 	}
 
 	if err := db.Create(&company).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Could not create company",
 			"error":   err.Error(),
@@ -115,7 +114,7 @@ func SingleCompany(c *fiber.Ctx) error {
 	}
 
 	response := GetCompanyResponse(company)
-		
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   response,
@@ -144,7 +143,7 @@ func UpdateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -153,11 +152,10 @@ func UpdateCompany(c *fiber.Ctx) error {
 	}
 	utils.UpdateStruct(&company, &req)
 	// // Update only provided fields
-	// the utility functions basically does this part for us 
+	// the utility functions basically does this part for us
 	// if req.Name != nil {
 	// 	company.Name = *req.Name
 	// }
-
 
 	if err := db.Save(&company).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -200,29 +198,26 @@ func DeleteCompany(c *fiber.Ctx) error {
 	})
 }
 
-
-
 func GetCompanyResponse(company company_models.Company) dtos.CompanyResponse {
 	return dtos.CompanyResponse{
 		ID:              company.ID,
 		Name:            company.Name,
 		TradeNames:      company.TradeNames,
 		AuthorityNumber: company.AuthorityNumber,
-		LocalAddress:         company.LocalAddress,
+		LocalAddress:    company.LocalAddress,
 		Description:     company.Description,
 		Email:           company.Email,
 		PhoneNumber:     company.PhoneNumber,
-		CompanyTypeID:   company.CompanyTypeID,
-		CompanyCategory:   string(company.CompanyCategory),
+		CompanyCategory: string(company.CompanyCategory),
 		OfficeId:        company.OfficeId,
-		Office:        company.Office,
-		License:      company.License,
-		CEOName:company.CEOName ,
-		CEOPhone: company.CEOPhone,
-		CEOEmail:company.CEOEmail ,
-		CEOAddress: company.CEOAddress,
+		Office:          company.Office,
+		License:         company.License,
+		CEOName:         company.CEOName,
+		CEOPhone:        company.CEOPhone,
+		CEOEmail:        company.CEOEmail,
+		CEOAddress:      company.CEOAddress,
 		Duration:        company.Duration,
-		People : company.People,
+		People:          company.People,
 		CreatedAt:       company.CreatedAt,
 		UpdatedAt:       company.UpdatedAt,
 	}

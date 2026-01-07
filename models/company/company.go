@@ -74,8 +74,7 @@ type Company struct {
 	PhoneNumber     string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(20)" json:"phone_number"`
 	// رقم الهاتف
 
-	CompanyTypeID   uint `gorm:"column:type_id;not null;index" json:"type_id" validate:"required"`
-	// نوع الشركة (FK فقط – لا إنشاء تلقائي)
+
 
 	CompanyCategory     CompanyCategory `gorm:"type:varchar(100);not null" json:"company_category" validate:"required"`
 	// نوع الشركة (للقراءة فقط)
@@ -137,9 +136,7 @@ func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 		return errors.New("company local address is required")
 	}
 
-	if c.CompanyTypeID == 0 {
-		return errors.New("company type is required")
-	}
+	
 
 	if c.OfficeId == 0 {
 		return errors.New("office is required")

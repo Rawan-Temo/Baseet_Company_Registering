@@ -51,7 +51,6 @@ type CreateLicenseRequest struct {
 type UpdateLicenseRequest struct {
 	StartDate      *time.Time `json:"start_date"`
 	ExpirationDate *time.Time `json:"expiration_date"`
-	Image          *string    `json:"image"`
 }
 
 type LicenseResponse struct {
@@ -74,4 +73,11 @@ type LoginRequest struct {
 type LoginResponse struct {
 	User  UserResponse `json:"user"`
 	Token string       `json:"token"`
+}
+
+
+type Regiester struct{
+	User CreateUserRequest `json:"user"`
+	Company CreateCompanyRequest `json:"company"`
+
 }

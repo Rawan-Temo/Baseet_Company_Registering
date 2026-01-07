@@ -53,10 +53,7 @@ func (l *License) BeforeSave(tx *gorm.DB) (err error) {
 		return errors.New("invalid company_id")
 	}
 
-	// ---------- Safety: block nested creation ----------
-	if l.Company.ID != 0 {
-		return errors.New("nested company creation is not allowed")
-	}
+	
 
 	return nil
 }

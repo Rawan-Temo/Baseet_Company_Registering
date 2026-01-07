@@ -16,7 +16,7 @@ import (
 // ImageUploadConfig holds configuration for image uploads
 type ImageUploadConfig struct {
 	UploadDir    string
-	MaxFileSize  int64  // in bytes
+	MaxFileSize  int64 // in bytes
 	AllowedTypes []string
 }
 
@@ -28,49 +28,58 @@ func DefaultImageConfig() ImageUploadConfig {
 		AllowedTypes: []string{"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"},
 	}
 }
+func GenerateFileName(file *multipart.FileHeader) string {
+	ext := filepath.Ext(file.Filename)
+	timestamp := time.Now().UnixNano()
+	filename := fmt.Sprintf("%d%s", timestamp, ext)
+	return filename
+}
 
 // UploadImage handles single image file upload
-func UploadImage(c *fiber.Ctx, fieldName string, config ImageUploadConfig) (string, error) {
-	
+func UploadImage(c *fiber.Ctx, fieldName string, config ImageUploadConfig, filename string) error {
+	// Create directory if it doesn't exist
+
+	if _, err := os.Stat(config.UploadDir); os.IsNotExist(err) {
+		fmt.Println(config.UploadDir)
+		os.MkdirAll(config.UploadDir, 0755)
+	}
+
 	file, err := c.FormFile(fieldName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get file: %v", err)
+		return fmt.Errorf("failed to get file: %v", err)
 	}
 
 	// Validate file size
 	if file.Size > config.MaxFileSize {
-		return "", fmt.Errorf("file size exceeds maximum allowed size of %d bytes", config.MaxFileSize)
+		return fmt.Errorf("file size exceeds maximum allowed size of %d bytes", config.MaxFileSize)
 	}
 
 	// Validate file type
 	contentType := file.Header.Get("Content-Type")
 	isAllowed := false
 
-	isAllowed = slices.Contains(config.AllowedTypes , contentType)
-	
+	isAllowed = slices.Contains(config.AllowedTypes, contentType)
+
 	if !isAllowed {
-		return "", fmt.Errorf("file type %s is not allowed. Allowed types: %v", contentType, config.AllowedTypes)
+		return fmt.Errorf("file type %s is not allowed. Allowed types: %v", contentType, config.AllowedTypes)
 	}
 
 	// Create upload directory if it doesn't exist
 	if err := os.MkdirAll(config.UploadDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("failed to create upload directory: %v", err)
+		return fmt.Errorf("failed to create upload directory: %v", err)
 	}
 
 	// Generate unique filename
-	ext := filepath.Ext(file.Filename)
-	timestamp := time.Now().UnixNano()
-	filename := fmt.Sprintf("%d%s", timestamp, ext)
-	filePath := filepath.Join(config.UploadDir, filename)
 
 	// Save file
+	filePath := filepath.Join(config.UploadDir, filename)
 
 	if err := c.SaveFile(file, filePath); err != nil {
-		return "", fmt.Errorf("failed to save file: %v", err)
+		return fmt.Errorf("failed to save file: %v", err)
 	}
 
 	// Return relative path for database storage
-	return filename, nil
+	return nil
 }
 
 // UploadMultipleImages handles multiple image file uploads
@@ -78,6 +87,10 @@ func UploadMultipleImages(c *fiber.Ctx, fieldName string, config ImageUploadConf
 	form, err := c.MultipartForm()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse multipart form: %v", err)
+	}
+
+	if form == nil {
+		return nil, fmt.Errorf("no multipart form found")
 	}
 
 	files := form.File[fieldName]
