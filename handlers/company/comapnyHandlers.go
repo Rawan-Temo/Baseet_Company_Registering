@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/dtos"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/helpers"
 	company_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/company"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 	"github.com/gofiber/fiber/v2"
@@ -197,7 +199,51 @@ func DeleteCompany(c *fiber.Ctx) error {
 		"message": "Company deleted successfully",
 	})
 }
+func RegisterNewCompany(c *fiber.Ctx) error {
+	db := database.DB
+	var req dtos.RegisterCompanyRequest
 
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "could not parse json",
+			"error":   err.Error(),
+		})
+	}
+	fmt.Println(req.Company)
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
+
+	// Create Company
+	tx := db.Begin()
+	err, company, user := helpers.RegisterCompanyAndUser(req.User, req.Company, tx)
+	if err != nil {
+		tx.Rollback()
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Could not register company",
+			"error":   err.Error(),
+		})
+	}
+	if err := tx.Commit().Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "Could not commit transaction",
+			"error":   err.Error(),
+		})
+	}
+	return c.Status(201).JSON(fiber.Map{
+		"status":  "success",
+		"company": company,
+		"user":    user,
+	})
+}
 func GetCompanyResponse(company company_models.Company) dtos.CompanyResponse {
 	return dtos.CompanyResponse{
 		ID:              company.ID,

@@ -323,6 +323,3 @@ func CheckPasswordHash(password, hash string) bool {
 
 
 
-func RegisterNewCompany(c *fiber.Ctx)error{
-	return c.SendString("test")
-}

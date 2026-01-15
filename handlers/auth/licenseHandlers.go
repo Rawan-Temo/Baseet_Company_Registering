@@ -73,7 +73,7 @@ func CreateLicense(c *fiber.Ctx) error {
 	var req dtos.CreateLicenseRequest
 	contentType := c.Get("Content-Type")
 	if strings.Contains(contentType, "multipart/form-data") {
-		if err := helpers.ValidateMultiPartForm(c, &req); err != nil {
+		if err := helpers.ValidateMultiPartFormLicense(c, &req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"status":  "fail",
 				"message": "Invalid request format",
@@ -89,7 +89,13 @@ func CreateLicense(c *fiber.Ctx) error {
 			})
 		}
 	}
-
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "validation error",
+			"error":   err,
+		})
+	}
 	// Now create the license
 	license := auth_models.License{
 		CompanyId:      req.CompanyId,
@@ -354,9 +360,6 @@ func DeleteLicense(c *fiber.Ctx) error {
 }
 
 // ========================== Helpers ==========================
-func isURL(path string) bool {
-	return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
-}
 
 func handleNotFoundOrError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ValidateMultiPartForm(c *fiber.Ctx, req *dtos.CreateLicenseRequest) error {
+func ValidateMultiPartFormLicense(c *fiber.Ctx, req *dtos.CreateLicenseRequest) error {
 	_, err := c.MultipartForm()
 	if err == nil {
 		companyIdStr := c.FormValue("company_id")
