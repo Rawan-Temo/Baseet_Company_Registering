@@ -11,7 +11,7 @@ import (
 func SetupCompanyRoutes(api fiber.Router) {
 	company := api.Group("/companies")
 	// Public routes
-	company.Post("/Register", handlers.RegisterNewCompany)
+	company.Post("/register", handlers.RegisterNewCompany)
 
 	company.Post("/", handlers.CreateCompany)
 	// Protected routes

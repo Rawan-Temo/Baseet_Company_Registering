@@ -59,28 +59,30 @@ type UpdateCompanyRequest struct {
 }
 
 type CompanyResponse struct {
-	ID              uint                    `json:"id"`
-	Name            string                  `json:"name"`
-	TradeNames      string                  `json:"trade_names"`
-	AuthorityName   string                  `json:"authority_name"`
-	AuthorityNumber string                  `json:"authority_number"`
-	LocalAddress    string                  `json:"local_address"`
-	Description     string                  `json:"description"`
-	Email           string                  `json:"email"`
-	PhoneNumber     string                  `json:"phone_number"`
-	CompanyTypeID   uint                    `json:"type_id"`
-	CompanyCategory string                  `json:"company_category"`
-	OfficeId        uint                    `json:"office_id"`
-	Office          general_models.Office   `json:"office"`
-	License         time.Time               `json:"license"`
-	CEOName         string                  `json:"ceo_name"`
-	CEOPhone        string                  `json:"ceo_phone"`
-	CEOEmail        string                  `json:"ceo_email"`
-	CEOAddress      string                  `json:"ceo_address"`
-	Duration        string                  `json:"duration"`
-	People          []company_models.People `json:"people"`
-	CreatedAt       time.Time               `json:"created_at"`
-	UpdatedAt       time.Time               `json:"updated_at"`
+	ID                        uint                    `json:"id"`
+	Name                      string                  `json:"name"`
+	TradeNames                string                  `json:"trade_names"`
+	ForeignBranchName         string                  `json:"foreign_branch_name"`
+	ForeignRegistrationNumber string                  `json:"foreign_registration_number"`
+	AuthorityName             string                  `json:"authority_name"`
+	AuthorityNumber           string                  `json:"authority_number"`
+	LocalAddress              string                  `json:"local_address"`
+	ForeignAddress            string                  `json:"foreign_address"`
+	Description               string                  `json:"description"`
+	Email                     string                  `json:"email"`
+	PhoneNumber               string                  `json:"phone_number"`
+	CompanyCategory           string                  `json:"company_category"`
+	OfficeId                  uint                    `json:"office_id"`
+	Office                    general_models.Office   `json:"office"`
+	License                   time.Time               `json:"license"`
+	CEOName                   string                  `json:"ceo_name"`
+	CEOPhone                  string                  `json:"ceo_phone"`
+	CEOEmail                  string                  `json:"ceo_email"`
+	CEOAddress                string                  `json:"ceo_address"`
+	Duration                  string                  `json:"duration"`
+	People                    []company_models.People `json:"people"`
+	CreatedAt                 time.Time               `json:"created_at"`
+	UpdatedAt                 time.Time               `json:"updated_at"`
 }
 
 // Trading Activity DTOs

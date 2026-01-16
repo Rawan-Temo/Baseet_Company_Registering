@@ -45,7 +45,7 @@ type Company struct {
 	// الاسم الرسمي للشركة
 
 	ForeignBranchName string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(200);not null" json:"foreign_branch_name"`
-	// اسم الفرع الأجنبي إن وجد
+	//   اسم الفرع الأجنبي إن وجد || اسم المكتب التمثيلي
 
 	ForeignRegistrationNumber string `gorm:"uniqueIndex:idx_user_name_active,where:deleted_at IS NULL;type:varchar(50);not null" json:"foreign_registration_number"`
 	// رقم التسجيل
@@ -54,7 +54,7 @@ type Company struct {
 	// الاسم (الأسماء) التجارية إن وجد
 
 	AuthorityName string `gorm:"type:varchar(100);not null" json:"authority_name" validate:"required"`
-	// اسم الممنوح من هيئة عامة أخرى
+	// اسم   هيئة عامة
 
 	AuthorityNumber string `gorm:"type:varchar(100)" json:"authority_number"`
 	// رقم التعريف الممنوح من هيئة عامة أخرى
