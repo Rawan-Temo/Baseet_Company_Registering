@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
+
 func AllOffices(c *fiber.Ctx) error {
 	db := database.DB
 	var total int64
@@ -23,7 +24,7 @@ func AllOffices(c *fiber.Ctx) error {
 		v := string(value)
 		queries[k] = append(queries[k], v)
 	})
-	allowedCols := []string{"name", "ID", "created_at", "updated_at", "deleted_at"}
+	allowedCols := []string{"name", "ID", "address", "created_at", "updated_at", "deleted_at"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
 	if err := queryBuilder.Apply().Find(&offices).Error; err != nil {
@@ -67,7 +68,8 @@ func CreateOffice(c *fiber.Ctx) error {
 		})
 	}
 	office := general_models.Office{
-		Name: req.Name,
+		Name:    req.Name,
+		Address: req.Address,
 	}
 
 	if err := db.Create(&office).Error; err != nil {
@@ -87,6 +89,7 @@ func CreateOffice(c *fiber.Ctx) error {
 	response := dtos.OfficeResponse{
 		ID:        office.ID,
 		Name:      office.Name,
+		Address:   office.Address,
 		CreatedAt: office.CreatedAt,
 		UpdatedAt: office.UpdatedAt,
 	}
@@ -115,6 +118,7 @@ func GetOffice(c *fiber.Ctx) error {
 	response := dtos.OfficeResponse{
 		ID:        office.ID,
 		Name:      office.Name,
+		Address:   office.Address,
 		CreatedAt: office.CreatedAt,
 		UpdatedAt: office.UpdatedAt,
 	}
@@ -143,9 +147,17 @@ func UpdateOffice(c *fiber.Ctx) error {
 		})
 	}
 
-
 	var office general_models.Office
-	res := db.Model(&office).Where("id = ?", id).Updates(map[string]interface{}{"name": *req.Name})
+	updateData := make(map[string]interface{})
+	if req.Name != nil {
+		updateData["name"] = *req.Name
+	}
+	if req.Address != nil {
+		updateData["address"] = *req.Address
+	}
+
+	res := db.Model(&general_models.Office{}).Where("id = ?", id).Updates(updateData)
+
 	if res.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Update failed"})
 	}
@@ -159,6 +171,7 @@ func UpdateOffice(c *fiber.Ctx) error {
 	response := dtos.OfficeResponse{
 		ID:        office.ID,
 		Name:      office.Name,
+		Address:   office.Address,
 		CreatedAt: office.CreatedAt,
 		UpdatedAt: office.UpdatedAt,
 	}
