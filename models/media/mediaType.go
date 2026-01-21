@@ -1,16 +1,9 @@
 package media_models
 
-import "gorm.io/gorm"
-
-
-
-
-
-
-
+import "github.com/Rawan-Temo/Baseet_Company_Registering.git/models"
 
 type MediaType struct {
-	gorm.Model
-	Name string `gorm:"type:varchar(100);unique;not null"`
-	Description string `gorm:"type:text"`
+	models.NewGormModel
+	Name        string `gorm:"type:varchar(100);unique;not null" json:"name"`
+	Description string `gorm:"type:text" json:"description"`
 }
