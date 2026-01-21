@@ -44,26 +44,11 @@ func GetAllLicenses(c *fiber.Ctx) error {
 			"details": err.Error(),
 		})
 	}
-
-	// Convert licenses to response DTOs
-	var licenseResponses []dtos.LicenseResponse
-	for _, license := range licenses {
-		licenseResponses = append(licenseResponses, dtos.LicenseResponse{
-			ID:             license.ID,
-			CompanyId:      license.CompanyId,
-			StartDate:      license.StartDate,
-			ExpirationDate: license.ExpirationDate,
-			Image:          license.Image,
-			CreatedAt:      license.CreatedAt,
-			UpdatedAt:      license.UpdatedAt,
-		})
-	}
-
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"total":   total,
-		"results": len(licenseResponses),
-		"data":    licenseResponses,
+		"results": len(licenses),
+		"data":    licenses,
 	})
 }
 
