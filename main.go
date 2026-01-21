@@ -12,10 +12,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TODOO : company activities , trading activities , people routes protect them with authentication middleware
-// TODOO : handlers for licenses  companyActivities middle table check media handlers maybe u screwed up something
-// TODOO : check compnay category functionality
-// and create the regiester end point
+// TODOO : media handlers , auth
 func main() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
@@ -29,8 +26,6 @@ func main() {
 	// Connect DB
 	database.ConnectDB()
 	routes.SetupAllRoutes(app)
-
-
 
 	// Start server
 	port := os.Getenv("PORT")

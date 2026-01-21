@@ -4,6 +4,7 @@ import (
 	auth_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/auth"
 	company_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/company"
 	general_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/general"
+	media_routes "github.com/Rawan-Temo/Baseet_Company_Registering.git/routes/media"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,5 +18,6 @@ func SetupAllRoutes(app *fiber.App) {
 	app.Route("api/v1", company_routes.SetupCompanyRoutes)
 	app.Route("api/v1", general_routes.SetupCompanyTypeRoutes)
 	app.Route("api/v1", general_routes.SetupOfficeRoutes)
+	app.Route("api/v1", media_routes.SetupMediaTypeRoutes)
 
 }

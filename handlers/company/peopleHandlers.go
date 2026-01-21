@@ -27,7 +27,7 @@ func GetAllPeople(c *fiber.Ctx) error {
 	allowedCols := []string{"company_id", "full_name", "email", "phone", "role", "ID", "created_at", "updated_at", "deleted_at"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
-	if err := queryBuilder.Apply().Find(&people).Error; err != nil {
+	if err := queryBuilder.Apply().Preload("Company").Find(&people).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to fetch people",
 			"details": err.Error(),
@@ -59,7 +59,7 @@ func CreatePerson(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -68,12 +68,13 @@ func CreatePerson(c *fiber.Ctx) error {
 	}
 
 	person := company_models.People{
-		CompanyID: req.CompanyID,
-		FullName:  req.FullName,
-		Email:     req.Email,
-		Phone:     req.Phone,
-		Address:   req.Address,
-		Role:      req.Role,
+		CompanyID:    req.CompanyID,
+		FullName:     req.FullName,
+		Email:        req.Email,
+		Phone:        req.Phone,
+		Address:      req.Address,
+		Role:         req.Role,
+		ExtraDetails: req.ExtraDetails,
 	}
 
 	if err := db.Create(&person).Error; err != nil {
@@ -91,15 +92,16 @@ func CreatePerson(c *fiber.Ctx) error {
 	}
 
 	response := dtos.PersonResponse{
-		ID:        person.ID,
-		CompanyID: person.CompanyID,
-		FullName:  person.FullName,
-		Email:     person.Email,
-		Phone:     person.Phone,
-		Address:   person.Address,
-		Role:      person.Role,
-		CreatedAt: person.CreatedAt,
-		UpdatedAt: person.UpdatedAt,
+		ID:           person.ID,
+		CompanyID:    person.CompanyID,
+		FullName:     person.FullName,
+		Email:        person.Email,
+		Phone:        person.Phone,
+		Address:      person.Address,
+		Role:         person.Role,
+		ExtraDetails: person.ExtraDetails,
+		CreatedAt:    person.CreatedAt,
+		UpdatedAt:    person.UpdatedAt,
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -112,7 +114,7 @@ func GetPersonByID(c *fiber.Ctx) error {
 	db := database.DB
 	var person company_models.People
 	id := c.Params("id")
-	if err := db.First(&person, id).Error; err != nil {
+	if err := db.Preload("Company").First(&person, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Person not found",
@@ -124,13 +126,16 @@ func GetPersonByID(c *fiber.Ctx) error {
 	}
 
 	response := dtos.PersonResponse{
-		ID:        person.ID,
-		CompanyID: person.CompanyID,
-		FullName:  person.FullName,
-		Email:     person.Email,
-		Phone:     person.Phone,
-		Address:   person.Address,
-		Role:      person.Role,
+		ID:           person.ID,
+		CompanyID:    person.CompanyID,
+		Company:      person.Company,
+		FullName:     person.FullName,
+		Email:        person.Email,
+		Phone:        person.Phone,
+		Address:      person.Address,
+		Role:         person.Role,
+		ExtraDetails: person.ExtraDetails,
+
 		CreatedAt: person.CreatedAt,
 		UpdatedAt: person.UpdatedAt,
 	}
@@ -151,14 +156,13 @@ func UpdatePerson(c *fiber.Ctx) error {
 			"error": "Invalid JSON",
 		})
 	}
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
 			"error":   err,
 		})
 	}
-
 
 	var person company_models.People
 	if err := db.First(&person, id).Error; err != nil {
@@ -180,6 +184,9 @@ func UpdatePerson(c *fiber.Ctx) error {
 	if req.Role != nil {
 		person.Role = *req.Role
 	}
+	if req.ExtraDetails != nil {
+		person.ExtraDetails = *req.ExtraDetails
+	}
 
 	res := db.Save(&person)
 	if res.Error != nil {
@@ -187,13 +194,15 @@ func UpdatePerson(c *fiber.Ctx) error {
 	}
 
 	response := dtos.PersonResponse{
-		ID:        person.ID,
-		CompanyID: person.CompanyID,
-		FullName:  person.FullName,
-		Email:     person.Email,
-		Phone:     person.Phone,
-		Address:   person.Address,
-		Role:      person.Role,
+		ID:           person.ID,
+		CompanyID:    person.CompanyID,
+		FullName:     person.FullName,
+		Email:        person.Email,
+		Phone:        person.Phone,
+		Address:      person.Address,
+		Role:         person.Role,
+		ExtraDetails: person.ExtraDetails,
+
 		CreatedAt: person.CreatedAt,
 		UpdatedAt: person.UpdatedAt,
 	}

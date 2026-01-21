@@ -133,21 +133,24 @@ type CreatePersonRequest struct {
 }
 
 type UpdatePersonRequest struct {
-	FullName *string `json:"full_name" validate:"omitempty,max=255"`
-	Email    *string `json:"email" validate:"omitempty,email"`
-	Phone    *string `json:"phone" validate:"omitempty,max=50"`
-	Address  *string `json:"address" validate:"omitempty,max=500"`
-	Role     *string `json:"role" validate:"omitempty,max=50"`
+	FullName     *string `json:"full_name" validate:"omitempty,max=255"`
+	Email        *string `json:"email" validate:"omitempty,email"`
+	Phone        *string `json:"phone" validate:"omitempty,max=50"`
+	Address      *string `json:"address" validate:"omitempty,max=500"`
+	ExtraDetails *string `json:"extra_details" validate:"omitempty,max=1000"`
+	Role         *string `json:"role" validate:"omitempty,max=50"`
 }
 
 type PersonResponse struct {
-	ID        uint      `json:"id"`
-	CompanyID uint      `json:"company_id"`
-	FullName  string    `json:"full_name"`
-	Email     string    `json:"email"`
-	Phone     string    `json:"phone"`
-	Address   string    `json:"address"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           uint                   `json:"id"`
+	CompanyID    uint                   `json:"company_id"`
+	Company      company_models.Company `json:"company"`
+	FullName     string                 `json:"full_name"`
+	Email        string                 `json:"email"`
+	Phone        string                 `json:"phone"`
+	Address      string                 `json:"address"`
+	Role         string                 `json:"role"`
+	ExtraDetails string                 `json:"extra_details"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
 }
