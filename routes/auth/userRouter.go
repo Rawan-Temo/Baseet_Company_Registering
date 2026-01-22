@@ -14,10 +14,10 @@ func SetupUserRoutes(api fiber.Router) {
 	user := api.Group("/users")
 	// Public routes
 	user.Post("/login", handlers.Login)
+	user.Use(middlewares.IsAuthenticated)
 	user.Patch("/delete-many", utils.DeleteMany(database, auth_models.User{}))
 	// Protected routes
 	user.Post("/", handlers.CreateUser)
-	user.Use(middlewares.IsAuthenticated)
 	user.Get("/profile", handlers.GetUserFromToken)
 
 	user.Get("/", handlers.AllUsers)

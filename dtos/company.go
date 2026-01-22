@@ -16,13 +16,13 @@ type RegisterCompanyRequest struct {
 // Company DTOs
 type CreateCompanyRequest struct {
 	Name                      string                  `json:"name" validate:"required,max=100"`
-	ForeignBranchName         string                  `json:"foreign_branch_name" validate:"required,max=100"`
-	ForeignRegistrationNumber string                  `json:"foreign_registration_number" validate:"required,max=100"`
+	ForeignBranchName         string                  `json:"foreign_branch_name" validate:"max=100"`
+	ForeignRegistrationNumber string                  `json:"foreign_registration_number" validate:"max=100"`
 	TradeNames                string                  `json:"trade_names" validate:"max=500"`
 	AuthorityName             string                  `json:"authority_name" validate:"max=100"`
 	AuthorityNumber           string                  `json:"authority_number" validate:"max=100"`
 	LocalAddress              string                  `json:"local_address" validate:"required,max=200"`
-	ForeignAddress            string                  `json:"foreign_address" validate:"required,max=200"`
+	ForeignAddress            string                  `json:"foreign_address" validate:"max=200"`
 	Description               string                  `json:"description" validate:"max=600"`
 	Email                     string                  `json:"email" validate:"omitempty,email"`
 	PhoneNumber               string                  `json:"phone_number" validate:"max=20"`

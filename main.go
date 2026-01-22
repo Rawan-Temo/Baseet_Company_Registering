@@ -13,6 +13,7 @@ import (
 )
 
 // TODOO : media handlers , auth
+// TODOO : fix the validations according to each company category
 func main() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {

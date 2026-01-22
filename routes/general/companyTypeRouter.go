@@ -3,6 +3,7 @@ package general_routes
 import (
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/database"
 	handlers "github.com/Rawan-Temo/Baseet_Company_Registering.git/handlers/general"
+	"github.com/Rawan-Temo/Baseet_Company_Registering.git/middlewares"
 	general_models "github.com/Rawan-Temo/Baseet_Company_Registering.git/models/general"
 	"github.com/Rawan-Temo/Baseet_Company_Registering.git/utils"
 
@@ -13,7 +14,9 @@ func SetupCompanyTypeRoutes(api fiber.Router) {
 	// var controllers  = utils.CreateControllers(models.CompanyType{})
 
 	typeRouter := api.Group("/types")
-	typeRouter.Patch("/delete-many", utils.DeleteMany(database.DB , general_models.CompanyType{}))
+	typeRouter.Use(middlewares.IsAuthenticated)
+
+	typeRouter.Patch("/delete-many", utils.DeleteMany(database.DB, general_models.CompanyType{}))
 
 	typeRouter.Get("/", handlers.AllCompanyTypes)
 	typeRouter.Post("/", handlers.CreateCompanyType)

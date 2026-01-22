@@ -132,7 +132,7 @@ func SingleCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var company company_models.Company
-	if err := db.Preload("Office").Preload("People").First(&company, id).Error; err != nil {
+	if err := db.Preload("Office").First(&company, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "Company not found",
