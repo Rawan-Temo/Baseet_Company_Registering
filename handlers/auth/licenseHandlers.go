@@ -31,7 +31,7 @@ func GetAllLicenses(c *fiber.Ctx) error {
 	allowedCols := []string{"company_id", "image", "id", "created_at", "updated_at", "start_date", "expiration_date"}
 	queryBuilder := utils.NewQueryBuilder(db, queries, allowedCols)
 	queryBuilder.Filter().Sort().LimitFields().Paginate()
-	if err := queryBuilder.Apply().Find(&licenses).Error; err != nil {
+	if err := queryBuilder.Apply().Preload("Company").Find(&licenses).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to fetch licenses",
 			"details": err.Error(),
@@ -156,7 +156,7 @@ func GetLicenseByID(c *fiber.Ctx) error {
 	db := database.DB
 	var license auth_models.License
 	id := c.Params("id")
-	if err := db.First(&license, id).Error; err != nil {
+	if err := db.Preload("Company").First(&license, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "License not found",
@@ -170,6 +170,7 @@ func GetLicenseByID(c *fiber.Ctx) error {
 	response := dtos.LicenseResponse{
 		ID:             license.ID,
 		CompanyId:      license.CompanyId,
+		Company:        license.Company,
 		StartDate:      license.StartDate,
 		ExpirationDate: license.ExpirationDate,
 		Image:          license.Image,
