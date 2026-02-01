@@ -14,11 +14,11 @@ func SetupCompanyRoutes(api fiber.Router) {
 	// Public routes
 	company.Post("/register", handlers.RegisterNewCompany)
 
+	company.Get("/", handlers.AllCompanies)
 	company.Use(middlewares.IsAuthenticated)
 	company.Post("/", handlers.CreateCompany)
 	// Protected routes
 	company.Patch("/delete-many", utils.DeleteMany(database.DB, company_models.Company{}))
-	company.Get("/", handlers.AllCompanies)
 	company.Get("/:id", handlers.SingleCompany)
 	company.Patch("/:id", handlers.UpdateCompany)
 	company.Delete("/:id", handlers.DeleteCompany)

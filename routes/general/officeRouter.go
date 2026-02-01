@@ -12,10 +12,9 @@ import (
 func SetupOfficeRoutes(api fiber.Router) {
 	officeRouter := api.Group("/offices")
 
+	officeRouter.Get("/", handlers.AllOffices)
 	officeRouter.Use(middlewares.IsAuthenticated)
 	officeRouter.Patch("/delete-many", utils.DeleteMany(database.DB, general_models.Office{}))
-
-	officeRouter.Get("/", handlers.AllOffices)
 	officeRouter.Post("/", handlers.CreateOffice)
 	officeRouter.Get("/:id", handlers.GetOffice)
 	officeRouter.Patch("/:id", handlers.UpdateOffice)
