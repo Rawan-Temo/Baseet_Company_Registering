@@ -17,7 +17,7 @@ var DB *gorm.DB
 
 func ConnectDB() *gorm.DB {
 	// Connect with logger enabled for info level
-	dsn := "host=localhost user=postgres  password=admin123 dbname=testDb port=5433 sslmode=disable "
+	dsn := "host=localhost user=postgres  password=rawan445153 dbname=testdb port=5432 sslmode=disable "
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})

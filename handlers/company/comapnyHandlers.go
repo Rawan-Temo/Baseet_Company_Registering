@@ -37,7 +37,7 @@ func AllCompanies(c *fiber.Ctx) error {
 		"company_category",
 		"office_id",
 		"office",
-		"licesnse",
+		"license",
 		"duration",
 		"ceo_name",
 		"ceo_email",

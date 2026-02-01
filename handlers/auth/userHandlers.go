@@ -14,7 +14,6 @@ import (
 func AllUsers(c *fiber.Ctx) error {
 	db := database.DB
 
-	
 	var users []auth_models.User
 	queryArgs := c.Context().QueryArgs()
 	queries := map[string][]string{}
@@ -24,7 +23,7 @@ func AllUsers(c *fiber.Ctx) error {
 		queries[k] = append(queries[k], v)
 	})
 
-	allowedCols := []string{"id", "full_name","username", "email", "age", "created_at", "updated_at", "deleted_at" , }
+	allowedCols := []string{"id", "full_name", "username", "email", "age", "created_at", "updated_at", "deleted_at"}
 
 	queryBuild := utils.NewQueryBuilder(db, queries, allowedCols)
 
@@ -63,7 +62,7 @@ func CreateUser(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -120,7 +119,7 @@ func SingleUser(c *fiber.Ctx) error {
 
 	response := dtos.UserResponse{
 		ID:        user.ID,
-		FullName: user.FullName,
+		FullName:  user.FullName,
 		UserName:  user.UserName,
 		Email:     user.Email,
 		Role:      string(user.Role),
@@ -129,7 +128,6 @@ func SingleUser(c *fiber.Ctx) error {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
-
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
@@ -157,7 +155,7 @@ func UpdateUser(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -221,14 +219,14 @@ func DeleteUser(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	
+
 	db := database.DB
 	// Parse input
 	var req dtos.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
-	if err:= utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "fail",
 			"message": "validation error",
@@ -261,7 +259,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT
-	token, err := utils.GenerateToken(user.ID , string(user.Role))
+	token, err := utils.GenerateToken(user.ID, string(user.Role))
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate token")
 	}
@@ -271,6 +269,7 @@ func Login(c *fiber.Ctx) error {
 	userResponse := dtos.UserResponse{
 		ID:        user.ID,
 		UserName:  user.UserName,
+		FullName:  user.FullName,
 		Email:     user.Email,
 		Role:      string(user.Role),
 		CompanyId: user.CompanyId,
@@ -290,17 +289,15 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
-
 func GetUserFromToken(c *fiber.Ctx) error {
 	database := database.DB
 	currentUser := c.Locals("currentUser").(dtos.UserTokenClaim)
-
 
 	var user auth_models.User
 	database.Where("id = ?", currentUser.UserID).First(&user)
 	var userResponse = dtos.UserResponse{
 		ID:        user.ID,
-		FullName: user.FullName,
+		FullName:  user.FullName,
 		UserName:  user.UserName,
 		Email:     user.Email,
 		Role:      string(user.Role),
@@ -308,7 +305,6 @@ func GetUserFromToken(c *fiber.Ctx) error {
 		Active:    user.Active,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -320,6 +316,3 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
-
-
-
